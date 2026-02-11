@@ -8,6 +8,7 @@ hafif bir kod temizliği
 
 ## şu anki data output formatı
 scouterInitials;eventName;matchLevel;matchNumber;robotPosition;autoScored;autoNeutralBrought;level1Climb;autoPickupDepot;autoPickupOutpost;autoPickupNeutral;teleopScored;teleopNeutralPassed;teleopPickupDepot;teleopPickupOutpost;teleopPickupGround;climbLevel;driverSkill;defenseRating;robotSpeed;crossedBump;underTrench;proneToTip;disabled;goodAllianceMember;couldBeDefended;unnecessaryFoul;autoNotes;teleopNotes;notes
+
 matchLevel: qm = quals, f = finals
 robotPosition: r1 r2 r3 b1 b2 b3  (red 1,2,3 ve blue 1,2,3)
 level1Climb: c climbed, t attempted, n failed, na unknown
