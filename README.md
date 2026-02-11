@@ -3,8 +3,10 @@
 fotoğraf üzerinden robot konumu seçme
 "Özet & Data" sayfasında özet kısmında "na" yerine belirtilmemiş / undefined 
 hafif bir kod temizliği
+henüz kesinleştiremesem de bir yere magnetar logosunun koyulması
 ## bilinen buglar
 "Özet & Data" sayfasında aşağı kaydırdıkça arkaplan kesiliyor
+dil seçiminde hem yazı hem de yazı seçme dropdownu beyaz, hover yapmıyorken belli olmuyor
 
 ## şu anki data output formatı
 scouterInitials;eventName;matchLevel;matchNumber;robotPosition;autoScored;autoNeutralBrought;level1Climb;autoPickupDepot;autoPickupOutpost;autoPickupNeutral;teleopScored;teleopNeutralPassed;teleopPickupDepot;teleopPickupOutpost;teleopPickupGround;climbLevel;driverSkill;defenseRating;robotSpeed;crossedBump;underTrench;proneToTip;disabled;goodAllianceMember;couldBeDefended;unnecessaryFoul;autoNotes;teleopNotes;notes
