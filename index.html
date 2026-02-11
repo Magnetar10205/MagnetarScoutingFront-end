@@ -1,0 +1,412 @@
+<!--index.html-->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Magnetar Scouting</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="title">
+          <h1>Magnetar Scouting</h1>
+          <span class="badge">v0 • get-data</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <div class="steps" id="steps"></div>
+        <button class="btn" id="btnSettings" type="button">Ayarlar</button>
+        <button class="btn btn-danger" id="btnReset" type="button" title="Formu temizle">Temizle</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="card" id="card">
+
+        <!-- page 1, match info -->
+        <section class="page active" data-title="Maç Bilgisi">
+          <h2>Maç Bilgisi <small>Temel bilgiler</small></h2>
+
+          <div class="grid two">
+            <div class="field">
+              <label for="scouterInitials">Gözlemci isminin baş harfleri</label>
+              <input id="scouterInitials" name="scouterInitials" type="text" placeholder="AB" maxlength="10" autocomplete="off" />
+            </div>
+
+            <div class="field">
+              <label for="eventName">Etkinlik adı</label>
+              <input id="eventName" name="eventName" type="text" placeholder="İstanbul Regional" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Maç seviyesi</label>
+              <div class="seg" role="radiogroup" aria-label="Maç seviyesi">
+                <input type="radio" id="matchLevelQuals" name="matchLevel" value="quals">
+                <label for="matchLevelQuals">Quals</label>
+
+                <input type="radio" id="matchLevelFinals" name="matchLevel" value="finals">
+                <label for="matchLevelFinals">Finals</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="matchNumber">Maç numarası</label>
+              <input id="matchNumber" name="matchNumber" type="text" placeholder="#2" inputmode="numeric" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Robot yeri</label>
+            <div class="seg" role="radiogroup" aria-label="Robot yeri">
+              <input type="radio" id="posR1" name="robotPosition" value="r1"><label for="posR1">Kırmızı 1</label>
+              <input type="radio" id="posR2" name="robotPosition" value="r2"><label for="posR2">Kırmızı 2</label>
+              <input type="radio" id="posR3" name="robotPosition" value="r3"><label for="posR3">Kırmızı 3</label>
+              <input type="radio" id="posB1" name="robotPosition" value="b1"><label for="posB1">Mavi 1</label>
+              <input type="radio" id="posB2" name="robotPosition" value="b2"><label for="posB2">Mavi 2</label>
+              <input type="radio" id="posB3" name="robotPosition" value="b3"><label for="posB3">Mavi 3</label>
+            </div>
+          </div>
+        </section>
+
+        <!-- page 2, auto -->
+        <section class="page" data-title="Otonom">
+          <h2>Otonom <small>Sadece robotlar</small></h2>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Otonomda atılan yük sayısı</label>
+              <div class="counter" data-counter>
+                <button type="button" class="dec" aria-label="Azalt">−</button>
+                <input type="number" name="autoScored" value="0" min="0" inputmode="numeric" />
+                <button type="button" class="inc" aria-label="Arttır">+</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Nötr bölgeden getirilen yük sayısı</label>
+              <div class="counter" data-counter>
+                <button type="button" class="dec" aria-label="Azalt">−</button>
+                <input type="number" name="autoNeutralBrought" value="0" min="0" inputmode="numeric" />
+                <button type="button" class="inc" aria-label="Arttır">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Seviye 1'e tırmandı mı?</label>
+            <div class="seg" role="radiogroup" aria-label="Seviye 1'e tırmandı mı">
+              <input type="radio" id="l1_yes" name="level1Climb" value="climbed"><label for="l1_yes">Tırmandı</label>
+              <input type="radio" id="l1_try" name="level1Climb" value="attempted"><label for="l1_try">Denedi</label>
+              <input type="radio" id="l1_no"  name="level1Climb" value="failed"><label for="l1_no">Tırmanamadı</label>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Yük alma (Otonom)</label>
+
+              <div class="toggle">
+                <div class="tlabel">
+                  <div class="main">Depodan yük alındı</div>
+                  <div class="hint">Evet/Hayır</div>
+                </div>
+                <div class="switch" data-switch>
+                  <input type="checkbox" name="autoPickupDepot" />
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+
+              <div class="toggle">
+                <div class="tlabel">
+                  <div class="main">Outposttan yük alındı</div>
+                  <div class="hint">Evet/Hayır</div>
+                </div>
+                <div class="switch" data-switch>
+                  <input type="checkbox" name="autoPickupOutpost" />
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+
+              <div class="toggle">
+                <div class="tlabel">
+                  <div class="main">Nötr bölgeden yük alındı</div>
+                  <div class="hint">Evet/Hayır</div>
+                </div>
+                <div class="switch" data-switch>
+                  <input type="checkbox" name="autoPickupNeutral" />
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Otonom notları</label>
+              <textarea name="autoNotes" placeholder="..."></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- page 3, tele-op -->
+        <section class="page" data-title="Tele-op">
+          <h2>Tele-op <small>İnsan kontrolü</small></h2>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Tele-op ta atılan yük sayısı</label>
+              <div class="counter" data-counter>
+                <button type="button" class="dec" aria-label="Azalt">−</button>
+                <input type="number" name="teleopScored" value="0" min="0" inputmode="numeric" />
+                <button type="button" class="inc" aria-label="Arttır">+</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Nötr alandan pas verilen yük sayısı</label>
+              <div class="counter" data-counter>
+                <button type="button" class="dec" aria-label="Azalt">−</button>
+                <input type="number" name="teleopNeutralPassed" value="0" min="0" inputmode="numeric" />
+                <button type="button" class="inc" aria-label="Arttır">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Yük alma (Tele-op)</label>
+
+              <div class="toggle">
+                <div class="tlabel">
+                  <div class="main">Depodan yük alındı</div>
+                  <div class="hint">Evet/Hayır</div>
+                </div>
+                <div class="switch" data-switch>
+                  <input type="checkbox" name="teleopPickupDepot" />
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+
+              <div class="toggle">
+                <div class="tlabel">
+                  <div class="main">Outposttan yük alındı</div>
+                  <div class="hint">Evet/Hayır</div>
+                </div>
+                <div class="switch" data-switch>
+                  <input type="checkbox" name="teleopPickupOutpost" />
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+
+              <div class="toggle">
+                <div class="tlabel">
+                  <div class="main">Yerden yük alındı</div>
+                  <div class="hint">Evet/Hayır</div>
+                </div>
+                <div class="switch" data-switch>
+                  <input type="checkbox" name="teleopPickupGround" />
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Tele-op Notları</label>
+              <textarea name="teleopNotes" placeholder="..."></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- page 4, endgame n driver -->
+        <section class="page" data-title="Endgame & Sürücü">
+          <h2>Endgame & Sürücü</h2>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Tırmanış seviyesi</label>
+              <div class="seg" role="radiogroup" aria-label="Tırmanış seviyesi">
+                <input type="radio" id="cl0" name="climbLevel" value="0"><label for="cl0">0</label>
+                <input type="radio" id="cl1" name="climbLevel" value="1"><label for="cl1">1</label>
+                <input type="radio" id="cl2" name="climbLevel" value="2"><label for="cl2">2</label>
+                <input type="radio" id="cl3" name="climbLevel" value="3"><label for="cl3">3</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Sürücü yeteneği</label>
+              <div class="seg" role="radiogroup" aria-label="Sürücü yeteneği">
+                <input type="radio" id="d1" name="driverSkill" value="ineffective"><label for="d1">Etkisiz</label>
+                <input type="radio" id="d2" name="driverSkill" value="average"><label for="d2">Ortalama</label>
+                <input type="radio" id="d3" name="driverSkill" value="effective"><label for="d3">Etkili</label>
+                <input type="radio" id="d4" name="driverSkill" value="unobserved"><label for="d4">Gözlemlenmedi</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Defans puanlaması</label>
+              <div class="seg" role="radiogroup" aria-label="Defans puanlaması">
+                <input type="radio" id="def1" name="defenseRating" value="below"><label for="def1">Ortalamanın altında</label>
+                <input type="radio" id="def2" name="defenseRating" value="avg"><label for="def2">Ortalama</label>
+                <input type="radio" id="def3" name="defenseRating" value="good"><label for="def3">İyi</label>
+                <input type="radio" id="def4" name="defenseRating" value="great"><label for="def4">Çok iyi</label>
+                <input type="radio" id="def5" name="defenseRating" value="none"><label for="def5">Defans oynamadı</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Robotun hızı</label>
+              <div class="seg" role="radiogroup" aria-label="Robotun hızı">
+                <input type="radio" id="s1" name="robotSpeed" value="1"><label for="s1">1</label>
+                <input type="radio" id="s2" name="robotSpeed" value="2"><label for="s2">2</label>
+                <input type="radio" id="s3" name="robotSpeed" value="3"><label for="s3">3</label>
+                <input type="radio" id="s4" name="robotSpeed" value="4"><label for="s4">4</label>
+                <input type="radio" id="s5" name="robotSpeed" value="5"><label for="s5">5</label>
+              </div>
+              <div class="hintline" id="speedHint">1 = yavaş, 5 = hızlı</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- page 5, details -->
+        <section class="page" data-title="Özellikler">
+          <h2>Özellikler <small>Evet/Hayır</small></h2>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Bump'ın üzerinden geçti mi?</label>
+              <div class="seg">
+                <input type="radio" id="bumpY" name="crossedBump" value="yes"><label for="bumpY">Evet</label>
+                <input type="radio" id="bumpN" name="crossedBump" value="no"><label for="bumpN">Hayır</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Trench'in altından geçti mi?</label>
+              <div class="seg">
+                <input type="radio" id="trenchY" name="underTrench" value="yes"><label for="trenchY">Evet</label>
+                <input type="radio" id="trenchN" name="underTrench" value="no"><label for="trenchN">Hayır</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Devrilmeye meyilli mi?</label>
+              <div class="seg">
+                <input type="radio" id="tipY" name="proneToTip" value="yes"><label for="tipY">Evet</label>
+                <input type="radio" id="tipN" name="proneToTip" value="no"><label for="tipN">Hayır</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Devre dışı bırakıldı mı?</label>
+              <div class="seg">
+                <input type="radio" id="disY" name="disabled" value="yes"><label for="disY">Evet</label>
+                <input type="radio" id="disN" name="disabled" value="no"><label for="disN">Hayır</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Güzel ittifak üyesi olur mu?</label>
+              <div class="seg">
+                <input type="radio" id="allyY" name="goodAllianceMember" value="yes"><label for="allyY">Evet</label>
+                <input type="radio" id="allyN" name="goodAllianceMember" value="no"><label for="allyN">Hayır</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Defans edilebildi mi?</label>
+              <div class="seg">
+                <input type="radio" id="defdY" name="couldBeDefended" value="yes"><label for="defdY">Evet</label>
+                <input type="radio" id="defdN" name="couldBeDefended" value="no"><label for="defdN">Hayır</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Gereksiz faul yaptı mı?</label>
+              <div class="seg">
+                <input type="radio" id="foulY" name="unnecessaryFoul" value="yes"><label for="foulY">Evet</label>
+                <input type="radio" id="foulN" name="unnecessaryFoul" value="no"><label for="foulN">Hayır</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Genel Not</label>
+              <textarea name="notes" placeholder="..."></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- page 6, data -->
+        <section class="page" data-title="Özet & Data">
+          <h2>Özet & Data <small>Tek satır, `;` ile ayrılmış</small></h2>
+
+          <div class="field">
+            <label id="dataOutputLabel">Data output</label>
+            <textarea id="dataOutput" readonly placeholder="Verileri topla'ya basınca burada oluşur"></textarea>
+            <div class="hintline" id="dataHint">
+              Notlar içinde “;” varsa otomatik virgüle çevrilir.
+            </div>
+          </div>
+
+          <div class="grid two">
+            <button class="btn btn-primary" id="btnGetData" type="button">Verileri topla</button>
+            <button class="btn" id="btnCopyData" type="button">Kopyala</button>
+          </div>
+
+          <div class="field">
+            <label id="summaryLabel">Özet</label>
+            <div class="summary" id="summary"></div>
+          </div>
+        </section>
+
+        <div class="nav">
+          <div class="left">
+            <button class="btn" id="btnPrev" type="button">Geri</button>
+          </div>
+          <div class="center" id="navCenter">Sayfa 1 / 6</div>
+          <div class="right">
+            <button class="btn btn-primary" id="btnNext" type="button">İleri</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- settings -->
+  <div class="modal" id="settingsModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title" id="settingsTitle">Ayarlar</div>
+        <button class="btn" id="btnCloseSettings" type="button">Kapat</button>
+      </div>
+
+      <div class="panel-body">
+        <div class="field">
+          <label for="langSelect" id="langLabel">Dil</label>
+          <select id="langSelect">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- JS -->
+  <script src="js/utils.js"></script>
+  <script src="js/form.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
