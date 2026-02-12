@@ -1,7 +1,6 @@
 # magnetar scouting app front end
 ## yapılacaklar
-kod temizliği
-henüz kesinleştiremesem de bir yere magnetar logosunun koyulması
+kod temizliği ve henüz kesinleştiremesem de bir yere magnetar logosunun koyulması
 
 ## bilinen buglar
 henüz yok, buglar temizlendi
