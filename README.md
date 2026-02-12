@@ -1,4 +1,4 @@
-# magnetar scouting app front end
+# magnetar scouting app front end 1.0!!!
 ## özellikler 
 **6 adımlı scouting formu**
 1. maç bilgisi
