@@ -21,6 +21,9 @@
       UI.bindLiveSummary();
       UI.bindSettings();
       UI.bindSwipe();
+
+      UI.bindAutoStartMap();
+      UI.syncAutoStartTexts();
     },
 
     cacheEls() {
@@ -44,6 +47,16 @@
       UI.els.settingsModal = Utils.qs("#settingsModal");
       UI.els.btnCloseSettings = Utils.qs("#btnCloseSettings");
       UI.els.langSelect = Utils.qs("#langSelect");
+
+      // auto start map
+      UI.els.autoStartMap = Utils.qs("#autoStartMap");
+      UI.els.autoStartImg = Utils.qs("#autoStartImg");
+      UI.els.autoStartMarker = Utils.qs("#autoStartMarker");
+      UI.els.autoStartReadout = Utils.qs("#autoStartReadout");
+      UI.els.autoStartX = Utils.qs("#autoStartX");
+      UI.els.autoStartY = Utils.qs("#autoStartY");
+      UI.els.btnAutoUndo = Utils.qs("#btnAutoUndo");
+      UI.els.btnAutoFlip = Utils.qs("#btnAutoFlip");
     },
 
     toast(msg) {
@@ -155,6 +168,18 @@
         Form.clear();
         UI.go(0);
         UI.els.dataOutput.value = "";
+
+        // clear auto start selection too
+        if (UI.state.autoStart) {
+          UI.state.autoStart.selection = null;
+          UI.state.autoStart.history = [];
+          if (UI.els.autoStartX) UI.els.autoStartX.value = "";
+          if (UI.els.autoStartY) UI.els.autoStartY.value = "";
+          if (UI.els.autoStartMarker)
+            UI.els.autoStartMarker.style.display = "none";
+          UI.updateAutoStartReadout?.();
+        }
+
         UI.toast(I18N.t("toastCleared"));
       });
     },
@@ -231,8 +256,11 @@
         eventName,
         matchLevel,
         matchNumber,
-        teamCode, // <-- NEW FIELD
+        teamCode,
         robotPos,
+
+        fillNA(d.autoStartX),
+        fillNA(d.autoStartY),
 
         num(d.autoScored),
         num(d.autoNeutralBrought),
@@ -353,7 +381,7 @@
         ],
         [I18N.t("lblMatchNumber"), matchNoDisplay],
         [I18N.t("lblTeamCode"), teamCodeDisplay],
-        
+
         [
           I18N.t("lblRobotPosition"),
           d.robotPosition ? I18N.opt("robotPos", d.robotPosition) : NA,
@@ -416,6 +444,8 @@
         UI.els.settingsModal.classList.add("show");
         UI.els.settingsModal.setAttribute("aria-hidden", "false");
         UI.els.langSelect?.focus();
+        UI.syncAutoStartTexts();
+        UI.updateAutoStartMarker?.();
       };
 
       const close = () => {
@@ -486,6 +516,228 @@
         },
         { passive: true },
       );
+    },
+    syncAutoStartTexts() {
+      // Label'ı field üstünden yakalamak için:
+      // hidden input autoStartX -> closest(".field") -> ilk label
+      const xInp = UI.els.autoStartX;
+      const field = xInp?.closest(".field");
+      const label = field?.querySelector(":scope > label");
+
+      if (label) label.textContent = I18N.t("lblAutoStartLocation");
+      if (UI.els.btnAutoUndo)
+        UI.els.btnAutoUndo.textContent = I18N.t("btnAutoUndo");
+      if (UI.els.btnAutoFlip)
+        UI.els.btnAutoFlip.textContent = I18N.t("btnAutoFlip");
+
+      UI.updateAutoStartReadout();
+    },
+    bindAutoStartMap() {
+      const box = UI.els.autoStartMap;
+      const img = UI.els.autoStartImg;
+      const marker = UI.els.autoStartMarker;
+
+      if (!box || !img || !marker || !UI.els.autoStartX || !UI.els.autoStartY)
+        return;
+      const ALLOWED = [
+        { type: "rect", x0: 0.475, y0: 0.0, x1: 0.550, y1: 1.0 },
+      ];
+      const PREC = 3; // x/y kaç ondalık
+
+      const st = UI.state.autoStart || {
+        flipped: false,
+        selection: null,
+        history: [],
+      };
+      UI.state.autoStart = st;
+
+      const clamp01 = (v) => Math.max(0, Math.min(1, v));
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+      // returns allowed rect index, or -1
+      const findAllowedIndex = (x, y) => {
+        for (let i = 0; i < ALLOWED.length; i++) {
+          const a = ALLOWED[i];
+          if (a.type === "rect") {
+            if (x >= a.x0 && x <= a.x1 && y >= a.y0 && y <= a.y1) return i;
+          }
+        }
+        return -1;
+      };
+
+      const clampToAllowedRect = (x, y, idx) => {
+        const a = ALLOWED[idx];
+        if (!a || a.type !== "rect") return { x, y };
+        return { x: clamp(x, a.x0, a.x1), y: clamp(y, a.y0, a.y1) };
+      };
+
+      const setFlipClass = () => box.classList.toggle("flipped", !!st.flipped);
+
+      const setSelection = (sel, pushHistory = true) => {
+        if (pushHistory && st.selection) st.history.push({ ...st.selection });
+
+        st.selection = sel;
+
+        if (!sel) {
+          UI.els.autoStartX.value = "";
+          UI.els.autoStartY.value = "";
+          marker.style.display = "none";
+          UI.updateAutoStartReadout?.();
+          return;
+        }
+
+        UI.els.autoStartX.value = Number(sel.x).toFixed(PREC);
+        UI.els.autoStartY.value = Number(sel.y).toFixed(PREC);
+
+        UI.updateAutoStartMarker();
+        UI.updateAutoStartReadout?.();
+      };
+
+      UI.updateAutoStartMarker = () => {
+        const sel = st.selection;
+        if (!sel) {
+          marker.style.display = "none";
+          return;
+        }
+
+        const boxRect = box.getBoundingClientRect();
+        const imgRect = img.getBoundingClientRect();
+
+        // canonical -> visual (flip only affects X)
+        const visX = st.flipped ? 1 - sel.x : sel.x;
+        const visY = sel.y;
+
+        const left = imgRect.left - boxRect.left + visX * imgRect.width;
+        const top = imgRect.top - boxRect.top + visY * imgRect.height;
+
+        marker.style.left = `${left}px`;
+        marker.style.top = `${top}px`;
+        marker.style.display = "block";
+      };
+
+      UI.updateAutoStartReadout = () => {
+        const x = UI.els.autoStartX.value ? UI.els.autoStartX.value : "na";
+        const y = UI.els.autoStartY.value ? UI.els.autoStartY.value : "na";
+        if (UI.els.autoStartReadout) {
+          UI.els.autoStartReadout.textContent = I18N.format(
+            "autoStartReadout",
+            { x, y },
+          );
+        }
+      };
+
+      // click/tap on image: choose initial coordinate (not required)
+      img.addEventListener("click", (e) => {
+        const r = img.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) return;
+
+        const visX = clamp01((e.clientX - r.left) / r.width);
+        const visY = clamp01((e.clientY - r.top) / r.height);
+
+        // visual -> canonical
+        const x = st.flipped ? 1 - visX : visX;
+        const y = visY;
+
+        const idx = findAllowedIndex(x, y);
+        if (idx < 0) {
+          UI.toast(I18N.t("toastStartOutOfBounds"));
+          return;
+        }
+
+        setSelection({ x, y, zone: idx }, true);
+      });
+
+      // ---------------- DRAG MARKER ----------------
+      let dragging = false;
+      let dragPointerId = null;
+
+      const dragStart = (e) => {
+        if (!st.selection) return;
+
+        dragging = true;
+        dragPointerId = e.pointerId;
+
+        marker.classList.add("dragging");
+
+        // Undo should bring you back to pre-drag selection
+        st.history.push({ ...st.selection });
+
+        try {
+          box.setPointerCapture(dragPointerId);
+        } catch {}
+
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      const dragMove = (e) => {
+        if (!dragging || e.pointerId !== dragPointerId || !st.selection) return;
+
+        const r = img.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) return;
+
+        const visX = clamp01((e.clientX - r.left) / r.width);
+        const visY = clamp01((e.clientY - r.top) / r.height);
+
+        // visual -> canonical
+        let x = st.flipped ? 1 - visX : visX;
+        let y = visY;
+
+        // clamp inside the SAME allowed rect (zone) that was originally selected
+        const zone =
+          st.selection.zone ?? findAllowedIndex(st.selection.x, st.selection.y);
+        if (zone >= 0) {
+          const c = clampToAllowedRect(x, y, zone);
+          x = c.x;
+          y = c.y;
+          setSelection({ x, y, zone }, false); // don't spam history while dragging
+        } else {
+          // fallback: if zone is unknown (shouldn't happen), block movement
+          setSelection(
+            { x: st.selection.x, y: st.selection.y, zone: st.selection.zone },
+            false,
+          );
+        }
+      };
+
+      const dragEnd = (e) => {
+        if (!dragging || e.pointerId !== dragPointerId) return;
+
+        dragging = false;
+        dragPointerId = null;
+        marker.classList.remove("dragging");
+
+        try {
+          box.releasePointerCapture(e.pointerId);
+        } catch {}
+      };
+
+      marker.addEventListener("pointerdown", dragStart);
+      box.addEventListener("pointermove", dragMove);
+      box.addEventListener("pointerup", dragEnd);
+      box.addEventListener("pointercancel", dragEnd);
+
+      // undo
+      UI.els.btnAutoUndo?.addEventListener("click", () => {
+        if (st.history.length) {
+          const prev = st.history.pop();
+          st.selection = null;
+          setSelection(prev, false);
+        } else {
+          setSelection(null, false);
+        }
+      });
+
+      // flip (manual)
+      UI.els.btnAutoFlip?.addEventListener("click", () => {
+        st.flipped = !st.flipped;
+        setFlipClass();
+        UI.updateAutoStartMarker();
+      });
+
+      // initial
+      setFlipClass();
+      UI.updateAutoStartReadout();
     },
   };
 

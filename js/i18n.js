@@ -58,8 +58,14 @@
       lblEventName: "Etkinlik adı",
       lblMatchLevel: "Maç seviyesi",
       lblMatchNumber: "Maç numarası",
-      lblTeamCode: "Takım kodu", 
+      lblTeamCode: "Takım kodu",
       lblRobotPosition: "Robot yeri",
+      lblAutoStartLocation: "Otonom başlangıç konumu",
+      btnAutoUndo: "Geri al",
+      btnAutoFlip: "Görseli çevir",
+      toastStartOutOfBounds:
+        "Sadece izin verilen başlangıç alanına tıklayabilirsin.",
+      autoStartReadout: "x: {x} • y: {y}",
 
       lblAutoScored: "Otonomda atılan yük sayısı",
       lblAutoNeutralBrought: "Nötr bölgeden getirilen yük sayısı",
@@ -102,20 +108,39 @@
       opt: {
         matchLevel: { quals: "Quals", finals: "Finals" },
         robotPos: {
-          r1: "Kırmızı 1", r2: "Kırmızı 2", r3: "Kırmızı 3",
-          b1: "Mavi 1", b2: "Mavi 2", b3: "Mavi 3"
+          r1: "Kırmızı 1",
+          r2: "Kırmızı 2",
+          r3: "Kırmızı 3",
+          b1: "Mavi 1",
+          b2: "Mavi 2",
+          b3: "Mavi 3",
         },
-        level1Climb: { climbed: "Tırmandı", attempted: "Denedi", failed: "Tırmanamadı" },
-        driverSkill: { ineffective: "Etkisiz", average: "Ortalama", effective: "Etkili", unobserved: "Gözlemlenmedi" },
-        defenseRating: { below: "Ortalamanın altında", avg: "Ortalama", good: "İyi", great: "Çok iyi", none: "Defans oynamadı" },
-        yesNo: { yes: "Evet", no: "Hayır" }
+        level1Climb: {
+          climbed: "Tırmandı",
+          attempted: "Denedi",
+          failed: "Tırmanamadı",
+        },
+        driverSkill: {
+          ineffective: "Etkisiz",
+          average: "Ortalama",
+          effective: "Etkili",
+          unobserved: "Gözlemlenmedi",
+        },
+        defenseRating: {
+          below: "Ortalamanın altında",
+          avg: "Ortalama",
+          good: "İyi",
+          great: "Çok iyi",
+          none: "Defans oynamadı",
+        },
+        yesNo: { yes: "Evet", no: "Hayır" },
       },
 
       // toggle texts
       depot: "Depodan yük alındı",
       outpost: "Outposttan yük alındı",
       neutral: "Nötr bölgeden yük alındı",
-      ground: "Yerden yük alındı"
+      ground: "Yerden yük alındı",
     },
 
     en: {
@@ -157,7 +182,8 @@
 
       dataOutputLabel: "Data output",
       dataOutputPlaceholder: "Press Get data to generate here",
-      dataHint: "If notes contain ';' it will be replaced with ',' automatically.",
+      dataHint:
+        "If notes contain ';' it will be replaced with ',' automatically.",
       summaryLabel: "Summary",
       speedHint: "1 = slow, 5 = fast",
 
@@ -167,6 +193,11 @@
       lblMatchNumber: "Match number",
       lblTeamCode: "Team code",
       lblRobotPosition: "Robot position",
+      lblAutoStartLocation: "Auto start location",
+      btnAutoUndo: "Undo",
+      btnAutoFlip: "Flip image",
+      toastStartOutOfBounds: "Click inside the allowed start area only.",
+      autoStartReadout: "x: {x} • y: {y}",
 
       lblAutoScored: "Auto: cargo scored",
       lblAutoNeutralBrought: "Auto: cargo brought from neutral",
@@ -207,22 +238,46 @@
 
       opt: {
         matchLevel: { quals: "Qualifications", finals: "Finals" },
-        robotPos: { r1: "Red 1", r2: "Red 2", r3: "Red 3", b1: "Blue 1", b2: "Blue 2", b3: "Blue 3" },
-        level1Climb: { climbed: "Climbed", attempted: "Attempted", failed: "Failed" },
-        driverSkill: { ineffective: "Ineffective", average: "Average", effective: "Effective", unobserved: "Not observed" },
-        defenseRating: { below: "Below average", avg: "Average", good: "Good", great: "Great", none: "Did not play defense" },
-        yesNo: { yes: "Yes", no: "No" }
+        robotPos: {
+          r1: "Red 1",
+          r2: "Red 2",
+          r3: "Red 3",
+          b1: "Blue 1",
+          b2: "Blue 2",
+          b3: "Blue 3",
+        },
+        level1Climb: {
+          climbed: "Climbed",
+          attempted: "Attempted",
+          failed: "Failed",
+        },
+        driverSkill: {
+          ineffective: "Ineffective",
+          average: "Average",
+          effective: "Effective",
+          unobserved: "Not observed",
+        },
+        defenseRating: {
+          below: "Below average",
+          avg: "Average",
+          good: "Good",
+          great: "Great",
+          none: "Did not play defense",
+        },
+        yesNo: { yes: "Yes", no: "No" },
       },
 
       depot: "Picked up from depot",
       outpost: "Picked up from outpost",
       neutral: "Picked up from neutral",
-      ground: "Picked up from floor"
-    }
+      ground: "Picked up from floor",
+    },
   };
 
   function fmt(template, vars) {
-    return String(template).replace(/\{(\w+)\}/g, (_, k) => String(vars?.[k] ?? ""));
+    return String(template).replace(/\{(\w+)\}/g, (_, k) =>
+      String(vars?.[k] ?? ""),
+    );
   }
 
   function setText(sel, text) {
@@ -274,20 +329,24 @@
 
   const I18N = {
     current: "tr",
-    t(key) { return STR[this.current]?.[key] ?? key; },
-    format(key, vars) { return fmt(this.t(key), vars); },
+    t(key) {
+      return STR[this.current]?.[key] ?? key;
+    },
+    format(key, vars) {
+      return fmt(this.t(key), vars);
+    },
 
     // option lookup  with group, code for localized label
     opt(group, code) {
       const g = STR[this.current]?.opt?.[group];
-      if (!g) return (code || "na");
+      if (!g) return code || "na";
       return g[code] ?? (code || "na");
     },
 
     apply(lang) {
       if (!STR[lang]) lang = "tr";
       this.current = lang;
-      document.documentElement.lang = (lang === "tr" ? "tr" : "en");
+      document.documentElement.lang = lang === "tr" ? "tr" : "en";
       const t = STR[lang];
 
       // buttons
@@ -354,7 +413,9 @@
       setFieldLabelByName("notes", t.lblNotes);
 
       // toggle hint texts
-      Utils.qsa(".toggle .tlabel .hint").forEach(h => h.textContent = t.yesNo);
+      Utils.qsa(".toggle .tlabel .hint").forEach(
+        (h) => (h.textContent = t.yesNo),
+      );
 
       // toggle main texts
       setToggleMainByCheckboxName("autoPickupDepot", t.depot);
@@ -378,7 +439,7 @@
 
       setRadioLabelById("l1_yes", t.opt.level1Climb.climbed);
       setRadioLabelById("l1_try", t.opt.level1Climb.attempted);
-      setRadioLabelById("l1_no",  t.opt.level1Climb.failed);
+      setRadioLabelById("l1_no", t.opt.level1Climb.failed);
 
       setRadioLabelById("d1", t.opt.driverSkill.ineffective);
       setRadioLabelById("d2", t.opt.driverSkill.average);
@@ -393,22 +454,24 @@
 
       // yes/no radio labels
       const yesNoIds = [
-        ["bumpY","bumpN"],
-        ["trenchY","trenchN"],
-        ["tipY","tipN"],
-        ["disY","disN"],
-        ["allyY","allyN"],
-        ["defdY","defdN"],
-        ["foulY","foulN"]
+        ["bumpY", "bumpN"],
+        ["trenchY", "trenchN"],
+        ["tipY", "tipN"],
+        ["disY", "disN"],
+        ["allyY", "allyN"],
+        ["defdY", "defdN"],
+        ["foulY", "foulN"],
       ];
-      yesNoIds.forEach(([y,n]) => {
+      yesNoIds.forEach(([y, n]) => {
         setRadioLabelById(y, t.yes);
         setRadioLabelById(n, t.no);
       });
-    }
+      setText("#autoStartLabel", t.lblAutoStartLocation);
+      setText("#btnAutoUndo", t.btnAutoUndo);
+      setText("#btnAutoFlip", t.btnAutoFlip);
+    },
   };
 
   global.MagnetarScouting = global.MagnetarScouting || {};
   global.MagnetarScouting.I18N = I18N;
-
 })(window);

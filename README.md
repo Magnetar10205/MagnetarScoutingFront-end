@@ -1,8 +1,8 @@
 # magnetar scouting app front end
 ## eklenecekler
-fotoğraf üzerinden robot konumu seçme
-
 henüz kesinleştiremesem de bir yere magnetar logosunun koyulması
+-autoda şut yerlerinin mapi
+-teleopda şut yerlerinin mapi
 
 ## bilinen buglar
 henüz yok, buglar temizlendi

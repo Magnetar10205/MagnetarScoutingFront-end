@@ -167,6 +167,37 @@
                 /><label for="posB3">Mavi 3</label>
               </div>
             </div>
+
+            <div class="field">
+              <label id="autoStartLabel">Auto Start Location</label>
+
+              <div class="map-actions">
+                <button class="btn" id="btnAutoUndo" type="button">UNDO</button>
+                <button class="btn" id="btnAutoFlip" type="button">
+                  FLIP IMAGE
+                </button>
+              </div>
+
+              <div class="mapbox" id="autoStartMap" aria-label="Auto start map">
+                <img
+                  id="autoStartImg"
+                  src="assets/matchmap.png"
+                  alt="Match map"
+                  draggable="false"
+                />
+                <div
+                  class="map-marker"
+                  id="autoStartMarker"
+                  aria-hidden="true"
+                ></div>
+              </div>
+
+              <div class="hintline" id="autoStartReadout">x: na • y: na</div>
+
+              <!-- stored values (not required, empty is allowed) -->
+              <input type="hidden" id="autoStartX" name="autoStartX" />
+              <input type="hidden" id="autoStartY" name="autoStartY" />
+            </div>
           </section>
 
           <!-- page 2, auto -->
