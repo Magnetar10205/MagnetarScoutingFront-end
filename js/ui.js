@@ -24,6 +24,11 @@
 
       UI.bindAutoStartMap();
       UI.syncAutoStartTexts();
+
+      // NEW: two multi-shot maps
+      UI.bindAutoShotsMap();
+      UI.bindTeleShotsMap();
+      UI.syncShotMapTexts();
     },
 
     cacheEls() {
@@ -57,6 +62,24 @@
       UI.els.autoStartY = Utils.qs("#autoStartY");
       UI.els.btnAutoUndo = Utils.qs("#btnAutoUndo");
       UI.els.btnAutoFlip = Utils.qs("#btnAutoFlip");
+
+      // NEW: auto shots map (multi)
+      UI.els.autoShotsMap = Utils.qs("#autoShotsMap");
+      UI.els.autoShotsImg = Utils.qs("#autoShotsImg");
+      UI.els.autoShotsLayer = Utils.qs("#autoShotsLayer");
+      UI.els.autoShotsReadout = Utils.qs("#autoShotsReadout");
+      UI.els.autoShotsXY = Utils.qs("#autoShotsXY");
+      UI.els.btnAutoShotsUndo = Utils.qs("#btnAutoShotsUndo");
+      UI.els.btnAutoShotsFlip = Utils.qs("#btnAutoShotsFlip");
+
+      // NEW: tele shots map (multi)
+      UI.els.teleShotsMap = Utils.qs("#teleShotsMap");
+      UI.els.teleShotsImg = Utils.qs("#teleShotsImg");
+      UI.els.teleShotsLayer = Utils.qs("#teleShotsLayer");
+      UI.els.teleShotsReadout = Utils.qs("#teleShotsReadout");
+      UI.els.teleShotsXY = Utils.qs("#teleShotsXY");
+      UI.els.btnTeleShotsUndo = Utils.qs("#btnTeleShotsUndo");
+      UI.els.btnTeleShotsFlip = Utils.qs("#btnTeleShotsFlip");
     },
 
     toast(msg) {
@@ -150,6 +173,11 @@
         total: pages.length,
       });
 
+      // keep map markers positioned when page becomes visible
+      if (UI.state.idx === 0) UI.updateAutoStartMarker?.();
+      if (UI.state.idx === 1) UI.updateAutoShotsMarkers?.();
+      if (UI.state.idx === 2) UI.updateTeleShotsMarkers?.();
+
       if (UI.state.idx === pages.length - 1) UI.renderSummary();
     },
 
@@ -178,6 +206,22 @@
           if (UI.els.autoStartMarker)
             UI.els.autoStartMarker.style.display = "none";
           UI.updateAutoStartReadout?.();
+        }
+
+        // NEW: clear multi shot maps too
+        if (UI.state.autoShots) {
+          UI.state.autoShots.points = [];
+          UI.state.autoShots.history = [];
+          if (UI.els.autoShotsXY) UI.els.autoShotsXY.value = "";
+          if (UI.els.autoShotsLayer) UI.els.autoShotsLayer.innerHTML = "";
+          UI.updateAutoShotsReadout?.();
+        }
+        if (UI.state.teleShots) {
+          UI.state.teleShots.points = [];
+          UI.state.teleShots.history = [];
+          if (UI.els.teleShotsXY) UI.els.teleShotsXY.value = "";
+          if (UI.els.teleShotsLayer) UI.els.teleShotsLayer.innerHTML = "";
+          UI.updateTeleShotsReadout?.();
         }
 
         UI.toast(I18N.t("toastCleared"));
@@ -261,6 +305,10 @@
 
         fillNA(d.autoStartX),
         fillNA(d.autoStartY),
+
+        // NEW: shot maps export as 1 field each (x,y|x,y|...)
+        fillNA(d.autoShotsXY),
+        fillNA(d.teleShotsXY),
 
         num(d.autoScored),
         num(d.autoNeutralBrought),
@@ -369,7 +417,6 @@
       const ynToDisplay = (v) => (v ? I18N.opt("yesNo", v) : NA);
 
       const teamCodeDisplay = d.teamCode ? `#${d.teamCode}` : NA;
-
       const matchNoDisplay = d.matchNumber ? `#${d.matchNumber}` : NA;
 
       const rows = [
@@ -446,6 +493,11 @@
         UI.els.langSelect?.focus();
         UI.syncAutoStartTexts();
         UI.updateAutoStartMarker?.();
+
+        // NEW
+        UI.syncShotMapTexts();
+        UI.updateAutoShotsMarkers?.();
+        UI.updateTeleShotsMarkers?.();
       };
 
       const close = () => {
@@ -469,6 +521,13 @@
         UI.refreshStepTitles();
         UI.go(UI.state.idx);
         UI.renderSummary();
+
+        // NEW: update map labels/readouts after language switch
+        UI.syncAutoStartTexts();
+        UI.syncShotMapTexts();
+        UI.updateAutoStartMarker?.();
+        UI.updateAutoShotsMarkers?.();
+        UI.updateTeleShotsMarkers?.();
       });
     },
 
@@ -479,7 +538,9 @@
 
       const shouldIgnoreSwipeStart = (target) => {
         if (!target) return false;
-        return !!target.closest("input, textarea, select, button, .btn, label");
+        return !!target.closest(
+          "input, textarea, select, button, .btn, label, .mapbox, .map-marker, .map-layer",
+        );
       };
 
       card.addEventListener(
@@ -517,9 +578,8 @@
         { passive: true },
       );
     },
+
     syncAutoStartTexts() {
-      // Label'ı field üstünden yakalamak için:
-      // hidden input autoStartX -> closest(".field") -> ilk label
       const xInp = UI.els.autoStartX;
       const field = xInp?.closest(".field");
       const label = field?.querySelector(":scope > label");
@@ -532,6 +592,35 @@
 
       UI.updateAutoStartReadout();
     },
+
+    // NEW: sync labels/buttons/readouts for shot maps
+    syncShotMapTexts() {
+      // auto shots label
+      if (UI.els.autoShotsXY) {
+        const f = UI.els.autoShotsXY.closest(".field");
+        const lab = f?.querySelector(":scope > label");
+        if (lab) lab.textContent = I18N.t("lblAutoShotsLocation");
+      }
+      if (UI.els.btnAutoShotsUndo)
+        UI.els.btnAutoShotsUndo.textContent = I18N.t("btnAutoUndo");
+      if (UI.els.btnAutoShotsFlip)
+        UI.els.btnAutoShotsFlip.textContent = I18N.t("btnAutoFlip");
+
+      // tele shots label
+      if (UI.els.teleShotsXY) {
+        const f = UI.els.teleShotsXY.closest(".field");
+        const lab = f?.querySelector(":scope > label");
+        if (lab) lab.textContent = I18N.t("lblTeleShotsLocation");
+      }
+      if (UI.els.btnTeleShotsUndo)
+        UI.els.btnTeleShotsUndo.textContent = I18N.t("btnAutoUndo");
+      if (UI.els.btnTeleShotsFlip)
+        UI.els.btnTeleShotsFlip.textContent = I18N.t("btnAutoFlip");
+
+      UI.updateAutoShotsReadout?.();
+      UI.updateTeleShotsReadout?.();
+    },
+
     bindAutoStartMap() {
       const box = UI.els.autoStartMap;
       const img = UI.els.autoStartImg;
@@ -539,9 +628,7 @@
 
       if (!box || !img || !marker || !UI.els.autoStartX || !UI.els.autoStartY)
         return;
-      const ALLOWED = [
-        { type: "rect", x0: 0.475, y0: 0.0, x1: 0.550, y1: 1.0 },
-      ];
+      const ALLOWED = [{ type: "rect", x0: 0.475, y0: 0.0, x1: 0.55, y1: 1.0 }];
       const PREC = 3; // x/y kaç ondalık
 
       const st = UI.state.autoStart || {
@@ -692,7 +779,6 @@
           y = c.y;
           setSelection({ x, y, zone }, false); // don't spam history while dragging
         } else {
-          // fallback: if zone is unknown (shouldn't happen), block movement
           setSelection(
             { x: st.selection.x, y: st.selection.y, zone: st.selection.zone },
             false,
@@ -738,6 +824,289 @@
       // initial
       setFlipClass();
       UI.updateAutoStartReadout();
+    },
+
+    // NEW: auto shots multi map
+    bindAutoShotsMap() {
+      UI._bindMultiShotMap({
+        stateKey: "autoShots",
+        box: UI.els.autoShotsMap,
+        img: UI.els.autoShotsImg,
+        layer: UI.els.autoShotsLayer,
+        hidden: UI.els.autoShotsXY,
+        readout: UI.els.autoShotsReadout,
+        btnUndo: UI.els.btnAutoShotsUndo,
+        btnFlip: UI.els.btnAutoShotsFlip,
+        updateMarkersName: "updateAutoShotsMarkers",
+        updateReadoutName: "updateAutoShotsReadout",
+      });
+    },
+
+    // NEW: tele shots multi map
+    bindTeleShotsMap() {
+      UI._bindMultiShotMap({
+        stateKey: "teleShots",
+        box: UI.els.teleShotsMap,
+        img: UI.els.teleShotsImg,
+        layer: UI.els.teleShotsLayer,
+        hidden: UI.els.teleShotsXY,
+        readout: UI.els.teleShotsReadout,
+        btnUndo: UI.els.btnTeleShotsUndo,
+        btnFlip: UI.els.btnTeleShotsFlip,
+        updateMarkersName: "updateTeleShotsMarkers",
+        updateReadoutName: "updateTeleShotsReadout",
+      });
+    },
+
+    // NEW: shared implementation (2&3 same ALLOWED; 1 is separate and already handled above)
+    _bindMultiShotMap(cfg) {
+      const {
+        stateKey,
+        box,
+        img,
+        layer,
+        hidden,
+        readout,
+        btnUndo,
+        btnFlip,
+        updateMarkersName,
+        updateReadoutName,
+      } = cfg;
+
+      if (!box || !img || !layer || !hidden || !readout) return;
+
+      if (box.dataset.bound === "1") return;
+      box.dataset.bound = "1";
+
+      // ---- AYAR: 2 ve 3 için allowed bölgeler (aynı) ----
+      // Normalized coords: (0,0)=top-left, (1,1)=bottom-right
+      // Burayı sen ayarlayacaksın:
+      const ALLOWED = [{ type: "rect", x0: 0.0, y0: 0.0, x1: 1.0, y1: 1.0 }];
+
+      const PREC = 3;
+
+      const st = UI.state[stateKey] || {
+        flipped: false,
+        points: [],
+        history: [],
+      };
+      UI.state[stateKey] = st;
+
+      const clamp01 = (v) => Math.max(0, Math.min(1, v));
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const deepCopyPoints = (pts) =>
+        pts.map((p) => ({ x: p.x, y: p.y, zone: p.zone }));
+
+      const findAllowedIndex = (x, y) => {
+        for (let i = 0; i < ALLOWED.length; i++) {
+          const a = ALLOWED[i];
+          if (a.type === "rect") {
+            if (x >= a.x0 && x <= a.x1 && y >= a.y0 && y <= a.y1) return i;
+          }
+        }
+        return -1;
+      };
+
+      const clampToAllowedRect = (x, y, idx) => {
+        const a = ALLOWED[idx];
+        if (!a || a.type !== "rect") return { x, y };
+        return { x: clamp(x, a.x0, a.x1), y: clamp(y, a.y0, a.y1) };
+      };
+
+      const setFlipClass = () => box.classList.toggle("flipped", !!st.flipped);
+
+      const pointsToString = () => {
+        if (!st.points.length) return "";
+        return st.points
+          .map(
+            (p) => `${Number(p.x).toFixed(PREC)},${Number(p.y).toFixed(PREC)}`,
+          )
+          .join("|");
+      };
+
+      const syncHidden = () => {
+        hidden.value = pointsToString();
+      };
+
+      UI[updateReadoutName] = () => {
+        const n = st.points.length;
+        readout.textContent = I18N.format("shotsReadout", { n });
+      };
+
+      const canonicalFromClient = (clientX, clientY) => {
+        const r = img.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) return null;
+
+        const visX = clamp01((clientX - r.left) / r.width);
+        const visY = clamp01((clientY - r.top) / r.height);
+
+        const x = st.flipped ? 1 - visX : visX;
+        const y = visY;
+
+        return { x, y };
+      };
+
+      const pixelFromCanonical = (x, y) => {
+        const boxRect = box.getBoundingClientRect();
+        const imgRect = img.getBoundingClientRect();
+
+        const visX = st.flipped ? 1 - x : x;
+        const visY = y;
+
+        const left = imgRect.left - boxRect.left + visX * imgRect.width;
+        const top = imgRect.top - boxRect.top + visY * imgRect.height;
+        return { left, top };
+      };
+
+      const renderMarkers = () => {
+        layer.innerHTML = "";
+        st.points.forEach((p, idx) => {
+          const m = document.createElement("div");
+          m.className = "shot-marker";
+          m.dataset.idx = String(idx);
+
+          const pos = pixelFromCanonical(p.x, p.y);
+          m.style.left = `${pos.left}px`;
+          m.style.top = `${pos.top}px`;
+
+          layer.appendChild(m);
+        });
+      };
+
+      UI[updateMarkersName] = () => {
+        renderMarkers();
+      };
+
+      const commitAndRender = () => {
+        syncHidden();
+        UI[updateReadoutName]?.();
+        renderMarkers();
+      };
+
+      // click on layer: add a new point (unless clicking a marker)
+      layer.addEventListener("click", (e) => {
+        if (e.target && e.target.closest && e.target.closest(".shot-marker"))
+          return;
+
+        const c = canonicalFromClient(e.clientX, e.clientY);
+        if (!c) return;
+
+        const idx = findAllowedIndex(c.x, c.y);
+        if (idx < 0) {
+          UI.toast(I18N.t("toastStartOutOfBounds"));
+          return;
+        }
+
+        st.history.push(deepCopyPoints(st.points));
+        st.points.push({ x: c.x, y: c.y, zone: idx });
+        commitAndRender();
+      });
+
+      // drag markers
+      let dragging = false;
+      let dragPointerId = null;
+      let dragIdx = -1;
+
+      const onPointerDown = (e) => {
+        const mk =
+          e.target && e.target.closest
+            ? e.target.closest(".shot-marker")
+            : null;
+        if (!mk) return;
+
+        const idx = Number(mk.dataset.idx);
+        if (!Number.isFinite(idx) || !st.points[idx]) return;
+
+        dragging = true;
+        dragPointerId = e.pointerId;
+        dragIdx = idx;
+
+        mk.classList.add("dragging");
+
+        // snapshot before move (so undo reverts)
+        st.history.push(deepCopyPoints(st.points));
+
+        try {
+          layer.setPointerCapture(dragPointerId);
+        } catch {}
+
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      const onPointerMove = (e) => {
+        if (!dragging || e.pointerId !== dragPointerId) return;
+        if (dragIdx < 0 || !st.points[dragIdx]) return;
+
+        const c = canonicalFromClient(e.clientX, e.clientY);
+        if (!c) return;
+
+        const p = st.points[dragIdx];
+        const zone = p.zone ?? findAllowedIndex(p.x, p.y);
+        if (zone < 0) return;
+
+        const clamped = clampToAllowedRect(c.x, c.y, zone);
+        p.x = clamped.x;
+        p.y = clamped.y;
+
+        // update just this marker position
+        const mk = layer.querySelector(`.shot-marker[data-idx="${dragIdx}"]`);
+        if (mk) {
+          const pos = pixelFromCanonical(p.x, p.y);
+          mk.style.left = `${pos.left}px`;
+          mk.style.top = `${pos.top}px`;
+        }
+
+        syncHidden();
+        UI[updateReadoutName]?.();
+      };
+
+      const onPointerUp = (e) => {
+        if (!dragging || e.pointerId !== dragPointerId) return;
+
+        dragging = false;
+
+        const mk = layer.querySelector(`.shot-marker[data-idx="${dragIdx}"]`);
+        if (mk) mk.classList.remove("dragging");
+
+        dragPointerId = null;
+        dragIdx = -1;
+
+        try {
+          layer.releasePointerCapture(e.pointerId);
+        } catch {}
+      };
+
+      layer.addEventListener("pointerdown", onPointerDown);
+      layer.addEventListener("pointermove", onPointerMove);
+      layer.addEventListener("pointerup", onPointerUp);
+      layer.addEventListener("pointercancel", onPointerUp);
+
+      // undo
+      if (btnUndo) {
+        btnUndo.addEventListener("click", () => {
+          if (st.history.length) {
+            st.points = st.history.pop();
+            commitAndRender();
+          } else {
+            st.points = [];
+            commitAndRender();
+          }
+        });
+      }
+
+      // flip (manual)
+      if (btnFlip) {
+        btnFlip.addEventListener("click", () => {
+          st.flipped = !st.flipped;
+          setFlipClass();
+          renderMarkers();
+        });
+      }
+
+      // initial
+      setFlipClass();
+      commitAndRender();
     },
   };
 

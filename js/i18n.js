@@ -72,6 +72,9 @@
       lblLevel1Climb: "Seviye 1'e tırmandı mı?",
       lblAutoPickup: "Yük alma (Otonom)",
       lblAutoNotes: "Otonom notları",
+      lblAutoShotsLocation: "Otonom şut konumları",
+      lblTeleShotsLocation: "Tele-op şut konumları",
+      shotsReadout: "Atış: {n}",
 
       lblTeleScored: "Tele-op ta atılan yük sayısı",
       lblTeleNeutralPassed: "Nötr alandan pas verilen yük sayısı",
@@ -204,6 +207,9 @@
       lblLevel1Climb: "Climbed to level 1?",
       lblAutoPickup: "Pickup (Auto)",
       lblAutoNotes: "Auto notes",
+      lblAutoShotsLocation: "Auto shot locations",
+      lblTeleShotsLocation: "Teleop shot locations",
+      shotsReadout: "Shots: {n}",
 
       lblTeleScored: "Teleop: cargo scored",
       lblTeleNeutralPassed: "Teleop: cargo passed from neutral",

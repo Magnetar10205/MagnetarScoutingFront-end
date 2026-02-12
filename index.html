@@ -14,7 +14,7 @@
         <div class="brand">
           <div class="title">
             <h1>Magnetar Scouting</h1>
-            <span class="badge">v0 • get-data</span>
+            <span class="badge">v1 - alpha</span>
           </div>
         </div>
 
@@ -315,6 +315,36 @@
                 <label>Otonom notları</label>
                 <textarea name="autoNotes" placeholder="..."></textarea>
               </div>
+
+              <div class="field full">
+                <label>Otonom şut konumları</label>
+
+                <div class="map-actions">
+                  <button class="btn" id="btnAutoShotsUndo" type="button">
+                    Geri al
+                  </button>
+                  <button class="btn" id="btnAutoShotsFlip" type="button">
+                    Görseli çevir
+                  </button>
+                </div>
+
+                <div
+                  class="mapbox"
+                  id="autoShotsMap"
+                  aria-label="Auto shots map"
+                >
+                  <img
+                    id="autoShotsImg"
+                    src="assets/matchmap.png"
+                    alt="Match map"
+                    draggable="false"
+                  />
+                  <div class="map-layer" id="autoShotsLayer"></div>
+                </div>
+
+                <div class="hintline" id="autoShotsReadout">Shots: 0</div>
+                <input type="hidden" id="autoShotsXY" name="autoShotsXY" />
+              </div>
             </div>
           </section>
 
@@ -404,6 +434,36 @@
               <div class="field">
                 <label>Tele-op Notları</label>
                 <textarea name="teleopNotes" placeholder="..."></textarea>
+              </div>
+
+              <div class="field full">
+                <label>Tele-op şut konumları</label>
+
+                <div class="map-actions">
+                  <button class="btn" id="btnTeleShotsUndo" type="button">
+                    Geri al
+                  </button>
+                  <button class="btn" id="btnTeleShotsFlip" type="button">
+                    Görseli çevir
+                  </button>
+                </div>
+
+                <div
+                  class="mapbox"
+                  id="teleShotsMap"
+                  aria-label="Teleop shots map"
+                >
+                  <img
+                    id="teleShotsImg"
+                    src="assets/matchmap.png"
+                    alt="Match map"
+                    draggable="false"
+                  />
+                  <div class="map-layer" id="teleShotsLayer"></div>
+                </div>
+
+                <div class="hintline" id="teleShotsReadout">Shots: 0</div>
+                <input type="hidden" id="teleShotsXY" name="teleShotsXY" />
               </div>
             </div>
           </section>

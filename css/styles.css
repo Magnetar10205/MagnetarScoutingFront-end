@@ -710,7 +710,7 @@ input[type="number"] {
   background: rgba(0, 0, 0, 0.18);
   overflow: hidden;
   touch-action: none; /* mobile'da zoom/scroll saçmalığını azaltır */
-} 
+}
 
 .mapbox img {
   width: 100%;
@@ -742,6 +742,127 @@ input[type="number"] {
   cursor: grab;
   touch-action: none;
 }
-.map-marker.dragging{
+.map-marker.dragging {
   cursor: grabbing;
+}
+
+/* multi-marker map layer */
+.map-layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* --- Shot maps: markers visible + maps centered --- */
+
+/* Map action buttons row */
+.map-actions {
+  display: flex;
+  gapsgap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Make ALL mapboxes centered like the first one */
+.mapbox {
+  position: relative;
+  width: min(520px, 100%);
+  margin: 0 auto; /* <-- center */
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* Image fills the box nicely */
+.mapbox img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Overlay layer for clicks + markers */
+.map-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2; /* <-- above the image */
+}
+
+/* MARKERS (this is the missing part) */
+.map-layer .map-marker {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(
+    180deg,
+    rgba(124, 246, 255, 0.95),
+    rgba(180, 140, 255, 0.85)
+  );
+  border: 1px solid rgba(124, 246, 255, 0.7);
+  box-shadow: 0 0 0 6px rgba(124, 246, 255, 0.1);
+  cursor: grab;
+  touch-action: none; /* pointer drag için şart */
+}
+
+.map-layer .map-marker.dragging {
+  cursor: grabbing;
+  box-shadow: 0 0 0 10px rgba(124, 246, 255, 0.12);
+}
+
+/* --- Shot maps fixes: visible markers + centered layout --- */
+
+@media (min-width: 860px) {
+  .grid.two .field.full {
+    grid-column: 1 / -1;
+  }
+}
+
+/* buttons row (typo fix + alignment) */
+.map-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* make sure these map boxes are positioning contexts */
+#autoShotsMap,
+#teleShotsMap {
+  position: relative;
+}
+
+/* overlay must sit on top of the image */
+#autoShotsLayer,
+#teleShotsLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  touch-action: none;
+}
+
+/* IMPORTANT: avoid collision with any existing .map-marker rules */
+.shot-marker {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(
+    180deg,
+    rgba(124, 246, 255, 0.95),
+    rgba(180, 140, 255, 0.85)
+  );
+  border: 1px solid rgba(124, 246, 255, 0.7);
+  box-shadow: 0 0 0 6px rgba(124, 246, 255, 0.1);
+  cursor: grab;
+}
+
+.shot-marker.dragging {
+  cursor: grabbing;
+  box-shadow: 0 0 0 10px rgba(124, 246, 255, 0.12);
 }

@@ -1,8 +1,7 @@
 # magnetar scouting app front end
-## eklenecekler
+## yapılacaklar
+kod temizliği
 henüz kesinleştiremesem de bir yere magnetar logosunun koyulması
--autoda şut yerlerinin mapi
--teleopda şut yerlerinin mapi
 
 ## bilinen buglar
 henüz yok, buglar temizlendi
