@@ -1,13 +1,14 @@
-// js/main.js
 (function (global) {
   "use strict";
 
   const { Form, UI, I18N } = global.MagnetarScouting;
 
   function bootstrap() {
-    // UI controls
+    // enhanced controls
     Form.initEnhancedInputs(document);
-    Form.sanitizeMatchNumber();
+
+    // match number rules
+    Form.initPrefixedNumberInputs();
 
     // default language
     I18N.apply("tr");

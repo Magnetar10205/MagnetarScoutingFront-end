@@ -1,4 +1,3 @@
-/* css/styles.css */
 :root{
   --bg0:#070913;
   --bg1:#0b1026;
@@ -13,17 +12,35 @@
 
 *{ box-sizing: border-box; }
 html,body{ height:100%; }
+html{
+  color-scheme: dark;
+  background: var(--bg1);
+}
+
 body{
   margin:0;
   color:var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  overflow-x:hidden;
+  position: relative;
+  background: none;
+}
+
+/* fixed background so it never shifts/cuts while scrolling */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background:
     radial-gradient(1200px 600px at 18% 18%, rgba(124,246,255,0.16), transparent 60%),
     radial-gradient(900px 520px at 82% 14%, rgba(180,140,255,0.14), transparent 55%),
     radial-gradient(1100px 700px at 65% 82%, rgba(124,246,255,0.10), transparent 60%),
     linear-gradient(180deg, var(--bg0), var(--bg1));
-  overflow-x:hidden;
+  background-repeat: no-repeat;
 }
+
 
 .wrap{
   max-width: var(--max);
@@ -233,12 +250,62 @@ input[type="text"], input[type="number"], textarea, select{
 textarea{ min-height: 120px; resize: vertical; }
 input::placeholder, textarea::placeholder{ color: rgba(238,242,255,0.45); }
 
+/* ---- Match number prefix (#) ---- */
+.prefixed{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+}
+.prefixed .prefix{
+  min-height: var(--tap);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  font-weight: 900;
+  letter-spacing: 0.4px;
+}
+.prefixed input[type="number"]{
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+/* remove number spinners (cleaner + less accidental changes) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"]{
+  -moz-appearance: textfield;
+}
+
 .seg{
   display:grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
+  position: relative;
 }
-.seg input{ display:none; }
+
+/* Instead of display:none (kills focus + accessibility), visually hide */
+.seg input{
+  position:absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  opacity: 0;
+}
+
 .seg label{
   margin:0;
   height: var(--tap);
@@ -259,6 +326,11 @@ input::placeholder, textarea::placeholder{ color: rgba(238,242,255,0.45); }
   border-color: rgba(124,246,255,0.55);
   background: linear-gradient(180deg, rgba(124,246,255,0.18), rgba(180,140,255,0.10));
   box-shadow: 0 0 0 5px rgba(124,246,255,0.07);
+}
+/* focus ring for keyboard navigation */
+.seg input:focus-visible + label{
+  outline: 2px solid rgba(124,246,255,0.75);
+  outline-offset: 2px;
 }
 
 .toggle{
@@ -305,7 +377,26 @@ input::placeholder, textarea::placeholder{ color: rgba(238,242,255,0.45); }
   left: 28px;
   background: rgba(102,255,167,0.95);
 }
-.switch input{ display:none; }
+
+/* same deal: don’t display:none the checkbox */
+.switch input{
+  position:absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  opacity: 0;
+}
+/* focus ring for switch */
+.switch:focus-within{
+  border-color: rgba(124,246,255,0.55);
+  box-shadow: 0 0 0 5px rgba(124,246,255,0.07);
+}
 
 .counter{
   display:flex;
@@ -445,3 +536,58 @@ input::placeholder, textarea::placeholder{ color: rgba(238,242,255,0.45); }
 .panel-body{
   padding: 14px;
 }
+/* --- Fix: native select dropdown options readable (white-on-white bug) --- */
+#langSelect{
+  /* kapalı halde (modal içinde) koyu görünüm */
+  background: rgba(15,18,40,0.98);
+  color: var(--text);
+}
+
+/* dropdown açılınca çoğu tarayıcı focus verir; o an açık liste beyaz olduğu için yazıyı karart */
+#langSelect:focus,
+#langSelect:active{
+  background: rgba(15,18,40,0.98);
+  color: #fff;
+}
+
+/* option'lar genelde select'in rengini inherit eder; zorla koyu yap */
+#langSelect option{
+  color: #fff !important;
+  background: rgba(15,18,40,0.98); /* bazı tarayıcılar bunu umursamaz, ama color çoğu yerde çalışır */
+
+}
+/* --- Robot position accent: Red vs Blue --- */
+#posR1:checked + label,
+#posR2:checked + label,
+#posR3:checked + label{
+  border-color: rgba(255,107,136,0.65);
+  background: rgba(255,107,136,0.12);
+  box-shadow: 0 0 0 5px rgba(255,107,136,0.10);
+}
+
+#posB1:checked + label,
+#posB2:checked + label,
+#posB3:checked + label{
+  border-color: rgba(124,246,255,0.65);
+  background: rgba(124,246,255,0.12);
+  box-shadow: 0 0 0 5px rgba(124,246,255,0.10);
+}
+
+/* Make prefixed short fields more compact (Team code + Match number) */
+.prefixed .prefix{
+  padding: 0 10px;
+  min-width: 44px; /* # kutusu fazla büyümesin */
+}
+
+.prefixed input[type="number"]{
+  min-width: 0;
+}
+
+/* specifically: keep those two fields tighter on wide screens */
+@media (min-width: 860px){
+  #teamCode, #matchNumber{
+    max-width: 100%;
+  }
+}
+
+

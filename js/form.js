@@ -1,8 +1,9 @@
-// js/form.js
 (function (global) {
   "use strict";
 
   const { Utils } = global.MagnetarScouting;
+
+  const PREF_NUM_FIELDS = new Set(["matchNumber", "teamCode"]);
 
   const Form = {
     initEnhancedInputs(root = document) {
@@ -43,6 +44,42 @@
       });
     },
 
+    // Match number + Team code: numeric-only, positive integer, allow empty
+    initPrefixedNumberInputs() {
+      const bind = (sel) => {
+        const inp = Utils.qs(sel);
+        if (!inp || inp.dataset.bound === "1") return;
+        inp.dataset.bound = "1";
+
+        const sanitize = () => {
+          const raw = String(inp.value ?? "").trim();
+          if (!raw.length) return; // allow empty
+
+          // strip anything non-digit (some browsers allow e/E/+/- even in type=number)
+          const digits = raw.replace(/[^\d]/g, "");
+          if (!digits.length) {
+            inp.value = "";
+            return;
+          }
+
+          // positive int
+          const n = Utils.clampInt(digits, 1);
+          inp.value = String(n);
+        };
+
+        inp.addEventListener("input", sanitize);
+        inp.addEventListener("change", sanitize);
+
+        // prevent wheel changing it while scrolling
+        inp.addEventListener("wheel", (e) => {
+          if (document.activeElement === inp) e.preventDefault();
+        }, { passive: false });
+      };
+
+      bind("#matchNumber");
+      bind("#teamCode");
+    },
+
     getData() {
       const data = {};
       const els = Utils.qsa("input, textarea, select");
@@ -62,6 +99,19 @@
         }
 
         if (el.type === "number") {
+          // special: matchNumber/teamCode should be "" when empty, otherwise positive int string
+          if (PREF_NUM_FIELDS.has(el.name)) {
+            const raw = String(el.value ?? "").trim();
+            if (!raw.length) {
+              data[el.name] = "";
+            } else {
+              const digits = raw.replace(/[^\d]/g, "");
+              data[el.name] = digits.length ? String(Utils.clampInt(digits, 1)) : "";
+            }
+            continue;
+          }
+
+          // counters
           data[el.name] = Utils.clampInt(el.value, 0);
           continue;
         }
@@ -76,10 +126,21 @@
       const els = Utils.qsa("input, textarea, select");
       for (const el of els) {
         if (!el.name) continue;
-        if (el.type === "radio" || el.type === "checkbox") el.checked = false;
-        else if (el.type === "number") el.value = "0";
-        else el.value = "";
+
+        if (el.type === "radio" || el.type === "checkbox") {
+          el.checked = false;
+          continue;
+        }
+
+        if (el.type === "number") {
+          // counters reset to 0, match/team code reset to empty
+          el.value = PREF_NUM_FIELDS.has(el.name) ? "" : "0";
+          continue;
+        }
+
+        el.value = "";
       }
+
       Form.syncSwitchVisuals();
       Form.clampAllCounters();
     },
@@ -97,24 +158,21 @@
       });
     },
 
-    // for i18n
+    // required fields check (teamCode is NOT required)
     validateRequired() {
       const d = Form.getData();
       const missing = [];
+
       if (!d.scouterInitials) missing.push("scouterInitials");
       if (!d.eventName) missing.push("eventName");
       if (!d.matchLevel) missing.push("matchLevel");
-      if (!d.matchNumber) missing.push("matchNumber");
-      if (!d.robotPosition) missing.push("robotPosition");
-      return { ok: missing.length === 0, missing };
-    },
 
-    sanitizeMatchNumber() {
-      const inp = Utils.qs("#matchNumber");
-      if (!inp) return;
-      inp.addEventListener("input", () => {
-        inp.value = inp.value.replace(/[^\d#]/g, "");
-      });
+      const mn = String(d.matchNumber ?? "").trim();
+      if (!mn || Utils.clampInt(mn, 1) < 1) missing.push("matchNumber");
+
+      if (!d.robotPosition) missing.push("robotPosition");
+
+      return { ok: missing.length === 0, missing };
     }
   };
 

@@ -1,11 +1,16 @@
-// js/ui.js
 (function (global) {
   "use strict";
 
   const { Utils, Form, I18N } = global.MagnetarScouting;
 
+  const CFG = Object.freeze({
+    toastMs: 2400,
+    swipeMinDx: 70,
+    swipeAxisRatio: 1.6,
+  });
+
   const UI = {
-    state: { idx: 0 },
+    state: { idx: 0, toastTimer: null },
     els: {},
 
     init() {
@@ -45,18 +50,36 @@
       const t = UI.els.toast;
       t.textContent = msg;
       t.classList.add("show");
-      clearTimeout(UI.toast._t);
-      UI.toast._t = setTimeout(() => t.classList.remove("show"), 2400);
+
+      if (UI.state.toastTimer) clearTimeout(UI.state.toastTimer);
+      UI.state.toastTimer = setTimeout(
+        () => t.classList.remove("show"),
+        CFG.toastMs,
+      );
     },
 
     buildSteps() {
       const steps = UI.els.steps;
       steps.innerHTML = "";
+
       UI.els.pages.forEach((p, i) => {
         const d = document.createElement("div");
         d.className = "dot" + (i === 0 ? " active" : "");
         d.title = p.dataset.title || `Page ${i + 1}`;
+
+        // keyboard-friendly without changing markup/CSS elsewhere
+        d.setAttribute("role", "button");
+        d.setAttribute("tabindex", "0");
+        d.setAttribute("aria-label", p.dataset.title || `Page ${i + 1}`);
+
         d.addEventListener("click", () => UI.go(i));
+        d.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            UI.go(i);
+          }
+        });
+
         steps.appendChild(d);
       });
     },
@@ -64,27 +87,65 @@
     refreshStepTitles() {
       const dots = Utils.qsa(".dot", UI.els.steps);
       UI.els.pages.forEach((p, i) => {
-        if (dots[i]) dots[i].title = p.dataset.title || `Page ${i + 1}`;
+        if (dots[i]) {
+          dots[i].title = p.dataset.title || `Page ${i + 1}`;
+          dots[i].setAttribute(
+            "aria-label",
+            p.dataset.title || `Page ${i + 1}`,
+          );
+        }
       });
     },
 
     go(i) {
       const pages = UI.els.pages;
-      UI.state.idx = Math.max(0, Math.min(pages.length - 1, i));
+      const fromIdx = UI.state.idx;
+      let targetIdx = Math.max(0, Math.min(pages.length - 1, i));
+
+      // --- Gate: Page 1 (match info) is required before leaving it ---
+      if (fromIdx === 0 && targetIdx > 0) {
+        const v = Form.validateRequired();
+        if (!v.ok) {
+          const nameMap = {
+            scouterInitials: I18N.t("lblScouterInitials"),
+            eventName: I18N.t("lblEventName"),
+            matchLevel: I18N.t("lblMatchLevel"),
+            matchNumber: I18N.t("lblMatchNumber"),
+            robotPosition: I18N.t("lblRobotPosition"),
+          };
+
+          const missingText = v.missing.map((k) => nameMap[k] || k).join(", ");
+          UI.toast(`${I18N.t("toastCantProceed")} ${missingText}`);
+
+          // stay on page 1
+          targetIdx = 0; // (we'll just force it)
+        }
+      }
+
+      UI.state.idx = targetIdx;
 
       pages.forEach((p, k) => p.classList.toggle("active", k === UI.state.idx));
-      Utils.qsa(".dot", UI.els.steps).forEach((d, k) => d.classList.toggle("active", k === UI.state.idx));
+      Utils.qsa(".dot", UI.els.steps).forEach((d, k) =>
+        d.classList.toggle("active", k === UI.state.idx),
+      );
 
       UI.els.btnPrev.disabled = UI.state.idx === 0;
       UI.els.btnNext.disabled = UI.state.idx === pages.length - 1;
 
-      UI.els.navCenter.textContent = I18N.format("navPage", { cur: UI.state.idx + 1, total: pages.length });
+      UI.els.navCenter.textContent = I18N.format("navPage", {
+        cur: UI.state.idx + 1,
+        total: pages.length,
+      });
 
       if (UI.state.idx === pages.length - 1) UI.renderSummary();
     },
 
-    prev() { UI.go(UI.state.idx - 1); },
-    next() { UI.go(UI.state.idx + 1); },
+    prev() {
+      UI.go(UI.state.idx - 1);
+    },
+    next() {
+      UI.go(UI.state.idx + 1);
+    },
 
     bindNav() {
       UI.els.btnPrev.addEventListener("click", UI.prev);
@@ -99,19 +160,19 @@
     },
 
     bindLiveSummary() {
-      document.addEventListener("input", () => {
+      // Stop listening to the whole planet; only listen inside the app card.
+      const root = UI.els.card;
+
+      root.addEventListener("input", () => {
         if (UI.state.idx === UI.els.pages.length - 1) UI.renderSummary();
       });
-      document.addEventListener("change", () => {
+
+      root.addEventListener("change", () => {
         if (UI.state.idx === UI.els.pages.length - 1) UI.renderSummary();
       });
     },
 
     // -------- DATA LOGIC --------
-    // - Text / non-boolean radios: empty => "na"
-    // - Counters: always numeric (0..)
-    // - Checkboxes: checked => "1", unchecked => "0"
-    // - Yes/No radios: yes => "1", no => "0", empty => "na"
     serialize() {
       const d = Form.getData();
 
@@ -127,43 +188,50 @@
         return t.length ? t : "na";
       };
 
-      // checkbox: true -> 1, false -> 0
       const yes01 = (boolVal) => (boolVal === true ? "1" : "0");
+      const yesNoTo = (val) =>
+        val === "yes" ? "1" : val === "no" ? "0" : "na";
 
-      // yes/no radio: yes -> 1, no -> 0, empty/other -> na
-      const yesNoTo = (val) => (val === "yes" ? "1" : (val === "no" ? "0" : "na"));
-
-      const initials = fillNA(cleanText(d.scouterInitials).replace(/\s+/g, "").toUpperCase());
+      const initials = fillNA(
+        cleanText(d.scouterInitials).replace(/\s+/g, "").toUpperCase(),
+      );
       const eventName = fillNA(d.eventName);
       const matchNumber = fillNA(cleanText(d.matchNumber).replaceAll("#", ""));
+      const teamCode = fillNA(cleanText(d.teamCode).replaceAll("#", ""));
 
-      // matchLevel: quals->qm, finals->f
       const matchLevelMap = { quals: "qm", finals: "f" };
       const matchLevel = fillNA(matchLevelMap[d.matchLevel] || d.matchLevel);
 
-      // robotPosition already r1/r2/... -> output same
       const robotPos = fillNA(d.robotPosition);
 
-      // level1Climb: climbed/attempted/failed -> c/t/n
       const level1Map = { climbed: "c", attempted: "t", failed: "n" };
       const level1 = fillNA(level1Map[d.level1Climb] || d.level1Climb);
 
-      // driverSkill -> 0/1/2/x
-      const driverMap = { ineffective: "0", average: "1", effective: "2", unobserved: "x" };
+      const driverMap = {
+        ineffective: "0",
+        average: "1",
+        effective: "2",
+        unobserved: "x",
+      };
       const driver = fillNA(driverMap[d.driverSkill] || d.driverSkill);
 
-      // defenseRating -> 1..4, none->0
-      const defenseMap = { none: "0", below: "1", avg: "2", good: "3", great: "4" };
+      const defenseMap = {
+        none: "0",
+        below: "1",
+        avg: "2",
+        good: "3",
+        great: "4",
+      };
       const defense = fillNA(defenseMap[d.defenseRating] || d.defenseRating);
 
-      // counters: 0, not na
-      const num = (v) => String((v ?? 0));
+      const num = (v) => String(v ?? 0);
 
       const fields = [
         initials,
         eventName,
         matchLevel,
         matchNumber,
+        teamCode, // <-- NEW FIELD
         robotPos,
 
         num(d.autoScored),
@@ -196,10 +264,19 @@
 
         fillNA(d.autoNotes),
         fillNA(d.teleopNotes),
-        fillNA(d.notes)
+        fillNA(d.notes),
       ];
 
       return fields.join(";");
+    },
+
+    async copyToClipboard(text) {
+      // secure + supported path
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+      return false;
     },
 
     bindGetData() {
@@ -211,9 +288,11 @@
             eventName: I18N.t("lblEventName"),
             matchLevel: I18N.t("lblMatchLevel"),
             matchNumber: I18N.t("lblMatchNumber"),
-            robotPosition: I18N.t("lblRobotPosition")
+            robotPosition: I18N.t("lblRobotPosition"),
           };
-          UI.toast(`${I18N.t("toastMissing")}: ${v.missing.map(k => nameMap[k] || k).join(", ")}`);
+
+          const missingText = v.missing.map((k) => nameMap[k] || k).join(", ");
+          UI.toast(`${I18N.t("toastCantProceed")} ${missingText}`);
           UI.go(0);
           return;
         }
@@ -228,12 +307,24 @@
           UI.toast(I18N.t("toastCopyFirst"));
           return;
         }
+
         try {
-          await navigator.clipboard.writeText(text);
-          UI.toast(I18N.t("toastCopied"));
+          const ok = await UI.copyToClipboard(text);
+          if (ok) {
+            UI.toast(I18N.t("toastCopied"));
+            return;
+          }
+          throw new Error("clipboard-fallback");
         } catch {
-          UI.els.dataOutput.focus();
-          UI.els.dataOutput.select();
+          const ta = UI.els.dataOutput;
+          const wasReadOnly = ta.hasAttribute("readonly");
+
+          if (wasReadOnly) ta.removeAttribute("readonly");
+          ta.focus({ preventScroll: true });
+          ta.select();
+          ta.setSelectionRange(0, ta.value.length);
+          if (wasReadOnly) ta.setAttribute("readonly", "");
+
           UI.toast(I18N.t("toastSelected"));
         }
       });
@@ -241,50 +332,73 @@
 
     renderSummary() {
       const d = Form.getData();
+      const NA = I18N.t("notAnswered");
 
-      // checkbox display: always Yes/No (never na)
+      // checkbox display: always Yes/No (never NA)
       const boolToYN = (b) => (b ? I18N.t("yes") : I18N.t("no"));
 
-      // yes/no radio display: selected -> localized Yes/No, empty -> na
-      const ynToNA = (v) => (v ? I18N.opt("yesNo", v) : "na");
+      // yes/no radio display: selected -> localized Yes/No, empty -> Not Answered
+      const ynToDisplay = (v) => (v ? I18N.opt("yesNo", v) : NA);
+
+      const teamCodeDisplay = d.teamCode ? `#${d.teamCode}` : NA;
+
+      const matchNoDisplay = d.matchNumber ? `#${d.matchNumber}` : NA;
 
       const rows = [
-        [I18N.t("lblScouterInitials"), d.scouterInitials || "na"],
-        [I18N.t("lblEventName"), d.eventName || "na"],
-        [I18N.t("lblMatchLevel"), d.matchLevel ? I18N.opt("matchLevel", d.matchLevel) : "na"],
-        [I18N.t("lblMatchNumber"), d.matchNumber || "na"],
-        [I18N.t("lblRobotPosition"), d.robotPosition ? I18N.opt("robotPos", d.robotPosition) : "na"],
+        [I18N.t("lblScouterInitials"), d.scouterInitials || NA],
+        [I18N.t("lblEventName"), d.eventName || NA],
+        [
+          I18N.t("lblMatchLevel"),
+          d.matchLevel ? I18N.opt("matchLevel", d.matchLevel) : NA,
+        ],
+        [I18N.t("lblMatchNumber"), matchNoDisplay],
+        [I18N.t("lblTeamCode"), teamCodeDisplay],
+        
+        [
+          I18N.t("lblRobotPosition"),
+          d.robotPosition ? I18N.opt("robotPos", d.robotPosition) : NA,
+        ],
 
         [I18N.t("lblAutoScored"), String(d.autoScored ?? 0)],
         [I18N.t("lblAutoNeutralBrought"), String(d.autoNeutralBrought ?? 0)],
-        [I18N.t("lblLevel1Climb"), d.level1Climb ? I18N.opt("level1Climb", d.level1Climb) : "na"],
+        [
+          I18N.t("lblLevel1Climb"),
+          d.level1Climb ? I18N.opt("level1Climb", d.level1Climb) : NA,
+        ],
 
-        ["Auto: Depot", boolToYN(d.autoPickupDepot)],
-        ["Auto: Outpost", boolToYN(d.autoPickupOutpost)],
-        ["Auto: Neutral", boolToYN(d.autoPickupNeutral)],
-        [I18N.t("lblAutoNotes"), d.autoNotes || "na"],
+        [I18N.t("sumAutoDepot"), boolToYN(d.autoPickupDepot)],
+        [I18N.t("sumAutoOutpost"), boolToYN(d.autoPickupOutpost)],
+        [I18N.t("sumAutoNeutral"), boolToYN(d.autoPickupNeutral)],
+        [I18N.t("lblAutoNotes"), d.autoNotes || NA],
 
         [I18N.t("lblTeleScored"), String(d.teleopScored ?? 0)],
         [I18N.t("lblTeleNeutralPassed"), String(d.teleopNeutralPassed ?? 0)],
-        ["Teleop: Depot", boolToYN(d.teleopPickupDepot)],
-        ["Teleop: Outpost", boolToYN(d.teleopPickupOutpost)],
-        ["Teleop: Ground", boolToYN(d.teleopPickupGround)],
-        [I18N.t("lblTeleNotes"), d.teleopNotes || "na"],
 
-        [I18N.t("lblClimbLevel"), d.climbLevel || "na"],
-        [I18N.t("lblDriverSkill"), d.driverSkill ? I18N.opt("driverSkill", d.driverSkill) : "na"],
-        [I18N.t("lblDefenseRating"), d.defenseRating ? I18N.opt("defenseRating", d.defenseRating) : "na"],
-        [I18N.t("lblRobotSpeed"), d.robotSpeed || "na"],
+        [I18N.t("sumTeleDepot"), boolToYN(d.teleopPickupDepot)],
+        [I18N.t("sumTeleOutpost"), boolToYN(d.teleopPickupOutpost)],
+        [I18N.t("sumTeleGround"), boolToYN(d.teleopPickupGround)],
+        [I18N.t("lblTeleNotes"), d.teleopNotes || NA],
 
-        [I18N.t("lblCrossedBump"), ynToNA(d.crossedBump)],
-        [I18N.t("lblUnderTrench"), ynToNA(d.underTrench)],
-        [I18N.t("lblProneToTip"), ynToNA(d.proneToTip)],
-        [I18N.t("lblDisabled"), ynToNA(d.disabled)],
-        [I18N.t("lblGoodAllianceMember"), ynToNA(d.goodAllianceMember)],
-        [I18N.t("lblCouldBeDefended"), ynToNA(d.couldBeDefended)],
-        [I18N.t("lblUnnecessaryFoul"), ynToNA(d.unnecessaryFoul)],
+        [I18N.t("lblClimbLevel"), d.climbLevel || NA],
+        [
+          I18N.t("lblDriverSkill"),
+          d.driverSkill ? I18N.opt("driverSkill", d.driverSkill) : NA,
+        ],
+        [
+          I18N.t("lblDefenseRating"),
+          d.defenseRating ? I18N.opt("defenseRating", d.defenseRating) : NA,
+        ],
+        [I18N.t("lblRobotSpeed"), d.robotSpeed || NA],
 
-        [I18N.t("lblNotes"), d.notes || "na"]
+        [I18N.t("lblCrossedBump"), ynToDisplay(d.crossedBump)],
+        [I18N.t("lblUnderTrench"), ynToDisplay(d.underTrench)],
+        [I18N.t("lblProneToTip"), ynToDisplay(d.proneToTip)],
+        [I18N.t("lblDisabled"), ynToDisplay(d.disabled)],
+        [I18N.t("lblGoodAllianceMember"), ynToDisplay(d.goodAllianceMember)],
+        [I18N.t("lblCouldBeDefended"), ynToDisplay(d.couldBeDefended)],
+        [I18N.t("lblUnnecessaryFoul"), ynToDisplay(d.unnecessaryFoul)],
+
+        [I18N.t("lblNotes"), d.notes || NA],
       ];
 
       const out = UI.els.summary;
@@ -330,30 +444,51 @@
 
     bindSwipe() {
       const card = UI.els.card;
-      let startX = null, startY = null;
+      let startX = null,
+        startY = null;
 
-      card.addEventListener("touchstart", (e) => {
-        const t = e.touches[0];
-        startX = t.clientX; startY = t.clientY;
-      }, { passive: true });
+      const shouldIgnoreSwipeStart = (target) => {
+        if (!target) return false;
+        return !!target.closest("input, textarea, select, button, .btn, label");
+      };
 
-      card.addEventListener("touchend", (e) => {
-        if (startX === null) return;
-        const t = e.changedTouches[0];
-        const dx = t.clientX - startX;
-        const dy = t.clientY - startY;
-        startX = null; startY = null;
+      card.addEventListener(
+        "touchstart",
+        (e) => {
+          if (shouldIgnoreSwipeStart(e.target)) {
+            startX = null;
+            startY = null;
+            return;
+          }
+          const t = e.touches[0];
+          startX = t.clientX;
+          startY = t.clientY;
+        },
+        { passive: true },
+      );
 
-        if (Math.abs(dx) < 70) return;
-        if (Math.abs(dx) < Math.abs(dy) * 1.6) return;
+      card.addEventListener(
+        "touchend",
+        (e) => {
+          if (startX === null) return;
 
-        if (dx < 0) UI.next();
-        else UI.prev();
-      }, { passive: true });
-    }
+          const t = e.changedTouches[0];
+          const dx = t.clientX - startX;
+          const dy = t.clientY - startY;
+          startX = null;
+          startY = null;
+
+          if (Math.abs(dx) < CFG.swipeMinDx) return;
+          if (Math.abs(dx) < Math.abs(dy) * CFG.swipeAxisRatio) return;
+
+          if (dx < 0) UI.next();
+          else UI.prev();
+        },
+        { passive: true },
+      );
+    },
   };
 
   global.MagnetarScouting = global.MagnetarScouting || {};
   global.MagnetarScouting.UI = UI;
-
 })(window);

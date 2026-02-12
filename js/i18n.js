@@ -44,6 +44,7 @@
       toastCopyFirst: "Önce verileri topla.",
       toastCopied: "Kopyalandı.",
       toastSelected: "Seçildi. Ctrl+C ile kopyala.",
+      toastCantProceed: "Burayı doldurmadan ilerleyemezsin:",
 
       // data section
       dataOutputLabel: "Data output",
@@ -57,6 +58,7 @@
       lblEventName: "Etkinlik adı",
       lblMatchLevel: "Maç seviyesi",
       lblMatchNumber: "Maç numarası",
+      lblTeamCode: "Takım kodu", 
       lblRobotPosition: "Robot yeri",
 
       lblAutoScored: "Otonomda atılan yük sayısı",
@@ -87,6 +89,14 @@
       yes: "Evet",
       no: "Hayır",
       yesNo: "Evet/Hayır",
+      notAnswered: "Belirtilmemiş",
+
+      sumAutoDepot: "Otonom: Depo",
+      sumAutoOutpost: "Otonom: Outpost",
+      sumAutoNeutral: "Otonom: Nötr",
+      sumTeleDepot: "Tele-op: Depo",
+      sumTeleOutpost: "Tele-op: Outpost",
+      sumTeleGround: "Tele-op: Yer",
 
       // options (codes to labels)
       opt: {
@@ -143,6 +153,7 @@
       toastCopyFirst: "Run Get data first.",
       toastCopied: "Copied.",
       toastSelected: "Selected. Press Ctrl+C to copy.",
+      toastCantProceed: "You can’t proceed without filling:",
 
       dataOutputLabel: "Data output",
       dataOutputPlaceholder: "Press Get data to generate here",
@@ -154,6 +165,7 @@
       lblEventName: "Event name",
       lblMatchLevel: "Match level",
       lblMatchNumber: "Match number",
+      lblTeamCode: "Team code",
       lblRobotPosition: "Robot position",
 
       lblAutoScored: "Auto: cargo scored",
@@ -184,6 +196,14 @@
       yes: "Yes",
       no: "No",
       yesNo: "Yes/No",
+      notAnswered: "Not Answered",
+
+      sumAutoDepot: "Auto: Depot",
+      sumAutoOutpost: "Auto: Outpost",
+      sumAutoNeutral: "Auto: Neutral",
+      sumTeleDepot: "Teleop: Depot",
+      sumTeleOutpost: "Teleop: Outpost",
+      sumTeleGround: "Teleop: Ground",
 
       opt: {
         matchLevel: { quals: "Qualifications", finals: "Finals" },
@@ -305,6 +325,7 @@
       setFieldLabelByName("eventName", t.lblEventName);
       setFieldLabelByName("matchLevel", t.lblMatchLevel);
       setFieldLabelByName("matchNumber", t.lblMatchNumber);
+      setFieldLabelByName("teamCode", t.lblTeamCode);
       setFieldLabelByName("robotPosition", t.lblRobotPosition);
 
       setFieldLabelByName("autoScored", t.lblAutoScored);
