@@ -39,12 +39,15 @@
 
       // toast popup
       toastCleared: "Temizlendi.",
-      toastMissing: "Eksik",
       toastDataReady: "Data hazır.",
       toastCopyFirst: "Önce verileri topla.",
       toastCopied: "Kopyalandı.",
       toastSelected: "Seçildi. Ctrl+C ile kopyala.",
       toastCantProceed: "Burayı doldurmadan ilerleyemezsin:",
+      toastStartOutOfBounds:
+        "Sadece izin verilen başlangıç alanına tıklayabilirsin.",
+      toastShotOutOfBounds:
+        "Sadece izin verilen atış alanına tıklayabilirsin.",
 
       // data section
       dataOutputLabel: "Data output",
@@ -63,8 +66,6 @@
       lblAutoStartLocation: "Otonom başlangıç konumu",
       btnAutoUndo: "Geri al",
       btnAutoFlip: "Görseli çevir",
-      toastStartOutOfBounds:
-        "Sadece izin verilen başlangıç alanına tıklayabilirsin.",
       autoStartReadout: "x: {x} • y: {y}",
 
       lblAutoScored: "Otonomda atılan yük sayısı",
@@ -176,12 +177,13 @@
       navPage: "Page {cur} / {total}",
 
       toastCleared: "Cleared.",
-      toastMissing: "Missing",
       toastDataReady: "Data ready.",
       toastCopyFirst: "Run Get data first.",
       toastCopied: "Copied.",
       toastSelected: "Selected. Press Ctrl+C to copy.",
       toastCantProceed: "You can’t proceed without filling:",
+      toastStartOutOfBounds: "Click inside the allowed start area only.",
+      toastShotOutOfBounds: "Click inside the allowed shooting area only.",
 
       dataOutputLabel: "Data output",
       dataOutputPlaceholder: "Press Get data to generate here",
@@ -199,7 +201,6 @@
       lblAutoStartLocation: "Auto start location",
       btnAutoUndo: "Undo",
       btnAutoFlip: "Flip image",
-      toastStartOutOfBounds: "Click inside the allowed start area only.",
       autoStartReadout: "x: {x} • y: {y}",
 
       lblAutoScored: "Auto: cargo scored",
@@ -418,6 +419,19 @@
       setFieldLabelByName("unnecessaryFoul", t.lblUnnecessaryFoul);
       setFieldLabelByName("notes", t.lblNotes);
 
+      // ---- map labels/buttons (i18n owns all text updates) ----
+      setText("#autoStartLabel", t.lblAutoStartLocation);
+      setText("#btnAutoUndo", t.btnAutoUndo);
+      setText("#btnAutoFlip", t.btnAutoFlip);
+
+      setFieldLabelByName("autoShotsXY", t.lblAutoShotsLocation);
+      setText("#btnAutoShotsUndo", t.btnAutoUndo);
+      setText("#btnAutoShotsFlip", t.btnAutoFlip);
+
+      setFieldLabelByName("teleShotsXY", t.lblTeleShotsLocation);
+      setText("#btnTeleShotsUndo", t.btnAutoUndo);
+      setText("#btnTeleShotsFlip", t.btnAutoFlip);
+
       // toggle hint texts
       Utils.qsa(".toggle .tlabel .hint").forEach(
         (h) => (h.textContent = t.yesNo),
@@ -472,9 +486,6 @@
         setRadioLabelById(y, t.yes);
         setRadioLabelById(n, t.no);
       });
-      setText("#autoStartLabel", t.lblAutoStartLocation);
-      setText("#btnAutoUndo", t.btnAutoUndo);
-      setText("#btnAutoFlip", t.btnAutoFlip);
     },
   };
 

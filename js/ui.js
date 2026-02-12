@@ -7,10 +7,21 @@
     toastMs: 2400,
     swipeMinDx: 70,
     swipeAxisRatio: 1.6,
+    dragSuppressClickMs: 450,
+    dragMoveThresholdPx: 2,
   });
 
   const UI = {
-    state: { idx: 0, toastTimer: null },
+    state: {
+      idx: 0,
+      toastTimer: null,
+
+      // map states
+      autoStart: null,
+      autoShots: null,
+      teleShots: null,
+    },
+
     els: {},
 
     init() {
@@ -23,12 +34,12 @@
       UI.bindSwipe();
 
       UI.bindAutoStartMap();
-      UI.syncAutoStartTexts();
+      UI.bindMultiShotMaps();
 
-      // NEW: two multi-shot maps
-      UI.bindAutoShotsMap();
-      UI.bindTeleShotsMap();
-      UI.syncShotMapTexts();
+      // initial readouts (language-dependent)
+      UI.updateAutoStartReadout();
+      UI.updateAutoShotsReadout();
+      UI.updateTeleShotsReadout();
     },
 
     cacheEls() {
@@ -63,7 +74,7 @@
       UI.els.btnAutoUndo = Utils.qs("#btnAutoUndo");
       UI.els.btnAutoFlip = Utils.qs("#btnAutoFlip");
 
-      // NEW: auto shots map (multi)
+      // auto shots map (multi)
       UI.els.autoShotsMap = Utils.qs("#autoShotsMap");
       UI.els.autoShotsImg = Utils.qs("#autoShotsImg");
       UI.els.autoShotsLayer = Utils.qs("#autoShotsLayer");
@@ -72,7 +83,7 @@
       UI.els.btnAutoShotsUndo = Utils.qs("#btnAutoShotsUndo");
       UI.els.btnAutoShotsFlip = Utils.qs("#btnAutoShotsFlip");
 
-      // NEW: tele shots map (multi)
+      // tele shots map (multi)
       UI.els.teleShotsMap = Utils.qs("#teleShotsMap");
       UI.els.teleShotsImg = Utils.qs("#teleShotsImg");
       UI.els.teleShotsLayer = Utils.qs("#teleShotsLayer");
@@ -103,7 +114,6 @@
         d.className = "dot" + (i === 0 ? " active" : "");
         d.title = p.dataset.title || `Page ${i + 1}`;
 
-        // keyboard-friendly without changing markup/CSS elsewhere
         d.setAttribute("role", "button");
         d.setAttribute("tabindex", "0");
         d.setAttribute("aria-label", p.dataset.title || `Page ${i + 1}`);
@@ -133,28 +143,32 @@
       });
     },
 
+    _requireMatchInfoOrToast() {
+      const v = Form.validateRequired();
+      if (v.ok) return true;
+
+      const nameMap = {
+        scouterInitials: I18N.t("lblScouterInitials"),
+        eventName: I18N.t("lblEventName"),
+        matchLevel: I18N.t("lblMatchLevel"),
+        matchNumber: I18N.t("lblMatchNumber"),
+        robotPosition: I18N.t("lblRobotPosition"),
+      };
+
+      const missingText = v.missing.map((k) => nameMap[k] || k).join(", ");
+      UI.toast(`${I18N.t("toastCantProceed")} ${missingText}`);
+      return false;
+    },
+
     go(i) {
       const pages = UI.els.pages;
       const fromIdx = UI.state.idx;
       let targetIdx = Math.max(0, Math.min(pages.length - 1, i));
 
-      // --- Gate: Page 1 (match info) is required before leaving it ---
+      // Gate: Page 1 required before leaving it
       if (fromIdx === 0 && targetIdx > 0) {
-        const v = Form.validateRequired();
-        if (!v.ok) {
-          const nameMap = {
-            scouterInitials: I18N.t("lblScouterInitials"),
-            eventName: I18N.t("lblEventName"),
-            matchLevel: I18N.t("lblMatchLevel"),
-            matchNumber: I18N.t("lblMatchNumber"),
-            robotPosition: I18N.t("lblRobotPosition"),
-          };
-
-          const missingText = v.missing.map((k) => nameMap[k] || k).join(", ");
-          UI.toast(`${I18N.t("toastCantProceed")} ${missingText}`);
-
-          // stay on page 1
-          targetIdx = 0; // (we'll just force it)
+        if (!UI._requireMatchInfoOrToast()) {
+          targetIdx = 0;
         }
       }
 
@@ -173,10 +187,10 @@
         total: pages.length,
       });
 
-      // keep map markers positioned when page becomes visible
-      if (UI.state.idx === 0) UI.updateAutoStartMarker?.();
-      if (UI.state.idx === 1) UI.updateAutoShotsMarkers?.();
-      if (UI.state.idx === 2) UI.updateTeleShotsMarkers?.();
+      // keep markers positioned when page becomes visible
+      if (UI.state.idx === 0) UI.updateAutoStartMarker();
+      if (UI.state.idx === 1) UI.updateAutoShotsMarkers();
+      if (UI.state.idx === 2) UI.updateTeleShotsMarkers();
 
       if (UI.state.idx === pages.length - 1) UI.renderSummary();
     },
@@ -205,23 +219,25 @@
           if (UI.els.autoStartY) UI.els.autoStartY.value = "";
           if (UI.els.autoStartMarker)
             UI.els.autoStartMarker.style.display = "none";
-          UI.updateAutoStartReadout?.();
+          UI.updateAutoStartReadout();
         }
 
-        // NEW: clear multi shot maps too
+        // clear multi shot maps
         if (UI.state.autoShots) {
           UI.state.autoShots.points = [];
           UI.state.autoShots.history = [];
+          UI.state.autoShots.drag = UI._newShotDragState();
           if (UI.els.autoShotsXY) UI.els.autoShotsXY.value = "";
           if (UI.els.autoShotsLayer) UI.els.autoShotsLayer.innerHTML = "";
-          UI.updateAutoShotsReadout?.();
+          UI.updateAutoShotsReadout();
         }
         if (UI.state.teleShots) {
           UI.state.teleShots.points = [];
           UI.state.teleShots.history = [];
+          UI.state.teleShots.drag = UI._newShotDragState();
           if (UI.els.teleShotsXY) UI.els.teleShotsXY.value = "";
           if (UI.els.teleShotsLayer) UI.els.teleShotsLayer.innerHTML = "";
-          UI.updateTeleShotsReadout?.();
+          UI.updateTeleShotsReadout();
         }
 
         UI.toast(I18N.t("toastCleared"));
@@ -229,7 +245,6 @@
     },
 
     bindLiveSummary() {
-      // Stop listening to the whole planet; only listen inside the app card.
       const root = UI.els.card;
 
       root.addEventListener("input", () => {
@@ -306,7 +321,6 @@
         fillNA(d.autoStartX),
         fillNA(d.autoStartY),
 
-        // NEW: shot maps export as 1 field each (x,y|x,y|...)
         fillNA(d.autoShotsXY),
         fillNA(d.teleShotsXY),
 
@@ -347,7 +361,6 @@
     },
 
     async copyToClipboard(text) {
-      // secure + supported path
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
         return true;
@@ -357,18 +370,7 @@
 
     bindGetData() {
       UI.els.btnGetData.addEventListener("click", () => {
-        const v = Form.validateRequired();
-        if (!v.ok) {
-          const nameMap = {
-            scouterInitials: I18N.t("lblScouterInitials"),
-            eventName: I18N.t("lblEventName"),
-            matchLevel: I18N.t("lblMatchLevel"),
-            matchNumber: I18N.t("lblMatchNumber"),
-            robotPosition: I18N.t("lblRobotPosition"),
-          };
-
-          const missingText = v.missing.map((k) => nameMap[k] || k).join(", ");
-          UI.toast(`${I18N.t("toastCantProceed")} ${missingText}`);
+        if (!UI._requireMatchInfoOrToast()) {
           UI.go(0);
           return;
         }
@@ -410,10 +412,7 @@
       const d = Form.getData();
       const NA = I18N.t("notAnswered");
 
-      // checkbox display: always Yes/No (never NA)
       const boolToYN = (b) => (b ? I18N.t("yes") : I18N.t("no"));
-
-      // yes/no radio display: selected -> localized Yes/No, empty -> Not Answered
       const ynToDisplay = (v) => (v ? I18N.opt("yesNo", v) : NA);
 
       const teamCodeDisplay = d.teamCode ? `#${d.teamCode}` : NA;
@@ -491,13 +490,11 @@
         UI.els.settingsModal.classList.add("show");
         UI.els.settingsModal.setAttribute("aria-hidden", "false");
         UI.els.langSelect?.focus();
-        UI.syncAutoStartTexts();
-        UI.updateAutoStartMarker?.();
 
-        // NEW
-        UI.syncShotMapTexts();
-        UI.updateAutoShotsMarkers?.();
-        UI.updateTeleShotsMarkers?.();
+        // keep markers aligned if modal causes layout changes
+        UI.updateAutoStartMarker();
+        UI.updateAutoShotsMarkers();
+        UI.updateTeleShotsMarkers();
       };
 
       const close = () => {
@@ -522,12 +519,15 @@
         UI.go(UI.state.idx);
         UI.renderSummary();
 
-        // NEW: update map labels/readouts after language switch
-        UI.syncAutoStartTexts();
-        UI.syncShotMapTexts();
-        UI.updateAutoStartMarker?.();
-        UI.updateAutoShotsMarkers?.();
-        UI.updateTeleShotsMarkers?.();
+        // update localized readouts
+        UI.updateAutoStartReadout();
+        UI.updateAutoShotsReadout();
+        UI.updateTeleShotsReadout();
+
+        // keep markers positioned
+        UI.updateAutoStartMarker();
+        UI.updateAutoShotsMarkers();
+        UI.updateTeleShotsMarkers();
       });
     },
 
@@ -539,7 +539,7 @@
       const shouldIgnoreSwipeStart = (target) => {
         if (!target) return false;
         return !!target.closest(
-          "input, textarea, select, button, .btn, label, .mapbox, .map-marker, .map-layer",
+          "input, textarea, select, button, .btn, label, .mapbox, .map-marker, .map-layer, .shot-marker",
         );
       };
 
@@ -579,48 +579,7 @@
       );
     },
 
-    syncAutoStartTexts() {
-      const xInp = UI.els.autoStartX;
-      const field = xInp?.closest(".field");
-      const label = field?.querySelector(":scope > label");
-
-      if (label) label.textContent = I18N.t("lblAutoStartLocation");
-      if (UI.els.btnAutoUndo)
-        UI.els.btnAutoUndo.textContent = I18N.t("btnAutoUndo");
-      if (UI.els.btnAutoFlip)
-        UI.els.btnAutoFlip.textContent = I18N.t("btnAutoFlip");
-
-      UI.updateAutoStartReadout();
-    },
-
-    // NEW: sync labels/buttons/readouts for shot maps
-    syncShotMapTexts() {
-      // auto shots label
-      if (UI.els.autoShotsXY) {
-        const f = UI.els.autoShotsXY.closest(".field");
-        const lab = f?.querySelector(":scope > label");
-        if (lab) lab.textContent = I18N.t("lblAutoShotsLocation");
-      }
-      if (UI.els.btnAutoShotsUndo)
-        UI.els.btnAutoShotsUndo.textContent = I18N.t("btnAutoUndo");
-      if (UI.els.btnAutoShotsFlip)
-        UI.els.btnAutoShotsFlip.textContent = I18N.t("btnAutoFlip");
-
-      // tele shots label
-      if (UI.els.teleShotsXY) {
-        const f = UI.els.teleShotsXY.closest(".field");
-        const lab = f?.querySelector(":scope > label");
-        if (lab) lab.textContent = I18N.t("lblTeleShotsLocation");
-      }
-      if (UI.els.btnTeleShotsUndo)
-        UI.els.btnTeleShotsUndo.textContent = I18N.t("btnAutoUndo");
-      if (UI.els.btnTeleShotsFlip)
-        UI.els.btnTeleShotsFlip.textContent = I18N.t("btnAutoFlip");
-
-      UI.updateAutoShotsReadout?.();
-      UI.updateTeleShotsReadout?.();
-    },
-
+    // ---------- AUTO START (single marker) ----------
     bindAutoStartMap() {
       const box = UI.els.autoStartMap;
       const img = UI.els.autoStartImg;
@@ -628,23 +587,27 @@
 
       if (!box || !img || !marker || !UI.els.autoStartX || !UI.els.autoStartY)
         return;
+      if (box.dataset.bound === "1") return;
+      box.dataset.bound = "1";
+
       const ALLOWED = [{ type: "rect", x0: 0.475, y0: 0.0, x1: 0.55, y1: 1.0 }];
-      const PREC = 3; // x/y kaç ondalık
+      const PREC = 3;
 
       const st = UI.state.autoStart || {
         flipped: false,
         selection: null,
         history: [],
+        allowed: ALLOWED,
+        prec: PREC,
       };
       UI.state.autoStart = st;
 
       const clamp01 = (v) => Math.max(0, Math.min(1, v));
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-      // returns allowed rect index, or -1
       const findAllowedIndex = (x, y) => {
-        for (let i = 0; i < ALLOWED.length; i++) {
-          const a = ALLOWED[i];
+        for (let i = 0; i < st.allowed.length; i++) {
+          const a = st.allowed[i];
           if (a.type === "rect") {
             if (x >= a.x0 && x <= a.x1 && y >= a.y0 && y <= a.y1) return i;
           }
@@ -653,7 +616,7 @@
       };
 
       const clampToAllowedRect = (x, y, idx) => {
-        const a = ALLOWED[idx];
+        const a = st.allowed[idx];
         if (!a || a.type !== "rect") return { x, y };
         return { x: clamp(x, a.x0, a.x1), y: clamp(y, a.y0, a.y1) };
       };
@@ -669,51 +632,17 @@
           UI.els.autoStartX.value = "";
           UI.els.autoStartY.value = "";
           marker.style.display = "none";
-          UI.updateAutoStartReadout?.();
+          UI.updateAutoStartReadout();
           return;
         }
 
-        UI.els.autoStartX.value = Number(sel.x).toFixed(PREC);
-        UI.els.autoStartY.value = Number(sel.y).toFixed(PREC);
+        UI.els.autoStartX.value = Number(sel.x).toFixed(st.prec);
+        UI.els.autoStartY.value = Number(sel.y).toFixed(st.prec);
 
         UI.updateAutoStartMarker();
-        UI.updateAutoStartReadout?.();
+        UI.updateAutoStartReadout();
       };
 
-      UI.updateAutoStartMarker = () => {
-        const sel = st.selection;
-        if (!sel) {
-          marker.style.display = "none";
-          return;
-        }
-
-        const boxRect = box.getBoundingClientRect();
-        const imgRect = img.getBoundingClientRect();
-
-        // canonical -> visual (flip only affects X)
-        const visX = st.flipped ? 1 - sel.x : sel.x;
-        const visY = sel.y;
-
-        const left = imgRect.left - boxRect.left + visX * imgRect.width;
-        const top = imgRect.top - boxRect.top + visY * imgRect.height;
-
-        marker.style.left = `${left}px`;
-        marker.style.top = `${top}px`;
-        marker.style.display = "block";
-      };
-
-      UI.updateAutoStartReadout = () => {
-        const x = UI.els.autoStartX.value ? UI.els.autoStartX.value : "na";
-        const y = UI.els.autoStartY.value ? UI.els.autoStartY.value : "na";
-        if (UI.els.autoStartReadout) {
-          UI.els.autoStartReadout.textContent = I18N.format(
-            "autoStartReadout",
-            { x, y },
-          );
-        }
-      };
-
-      // click/tap on image: choose initial coordinate (not required)
       img.addEventListener("click", (e) => {
         const r = img.getBoundingClientRect();
         if (r.width <= 0 || r.height <= 0) return;
@@ -721,7 +650,6 @@
         const visX = clamp01((e.clientX - r.left) / r.width);
         const visY = clamp01((e.clientY - r.top) / r.height);
 
-        // visual -> canonical
         const x = st.flipped ? 1 - visX : visX;
         const y = visY;
 
@@ -734,7 +662,7 @@
         setSelection({ x, y, zone: idx }, true);
       });
 
-      // ---------------- DRAG MARKER ----------------
+      // drag marker
       let dragging = false;
       let dragPointerId = null;
 
@@ -743,10 +671,9 @@
 
         dragging = true;
         dragPointerId = e.pointerId;
-
         marker.classList.add("dragging");
 
-        // Undo should bring you back to pre-drag selection
+        // keep old behavior for auto start (history always snapshots on drag start)
         st.history.push({ ...st.selection });
 
         try {
@@ -766,18 +693,16 @@
         const visX = clamp01((e.clientX - r.left) / r.width);
         const visY = clamp01((e.clientY - r.top) / r.height);
 
-        // visual -> canonical
         let x = st.flipped ? 1 - visX : visX;
         let y = visY;
 
-        // clamp inside the SAME allowed rect (zone) that was originally selected
         const zone =
           st.selection.zone ?? findAllowedIndex(st.selection.x, st.selection.y);
         if (zone >= 0) {
           const c = clampToAllowedRect(x, y, zone);
           x = c.x;
           y = c.y;
-          setSelection({ x, y, zone }, false); // don't spam history while dragging
+          setSelection({ x, y, zone }, false);
         } else {
           setSelection(
             { x: st.selection.x, y: st.selection.y, zone: st.selection.zone },
@@ -814,22 +739,77 @@
         }
       });
 
-      // flip (manual)
+      // flip
       UI.els.btnAutoFlip?.addEventListener("click", () => {
         st.flipped = !st.flipped;
         setFlipClass();
         UI.updateAutoStartMarker();
       });
 
-      // initial
       setFlipClass();
       UI.updateAutoStartReadout();
     },
 
-    // NEW: auto shots multi map
-    bindAutoShotsMap() {
-      UI._bindMultiShotMap({
-        stateKey: "autoShots",
+    updateAutoStartMarker() {
+      const st = UI.state.autoStart;
+      const box = UI.els.autoStartMap;
+      const img = UI.els.autoStartImg;
+      const marker = UI.els.autoStartMarker;
+
+      if (!st || !box || !img || !marker) return;
+
+      const sel = st.selection;
+      if (!sel) {
+        marker.style.display = "none";
+        return;
+      }
+
+      const boxRect = box.getBoundingClientRect();
+      const imgRect = img.getBoundingClientRect();
+
+      const visX = st.flipped ? 1 - sel.x : sel.x;
+      const visY = sel.y;
+
+      const left = imgRect.left - boxRect.left + visX * imgRect.width;
+      const top = imgRect.top - boxRect.top + visY * imgRect.height;
+
+      marker.style.left = `${left}px`;
+      marker.style.top = `${top}px`;
+      marker.style.display = "block";
+    },
+
+    updateAutoStartReadout() {
+      const x = UI.els.autoStartX?.value ? UI.els.autoStartX.value : "na";
+      const y = UI.els.autoStartY?.value ? UI.els.autoStartY.value : "na";
+      if (UI.els.autoStartReadout) {
+        UI.els.autoStartReadout.textContent = I18N.format("autoStartReadout", {
+          x,
+          y,
+        });
+      }
+    },
+
+    // ---------- MULTI SHOT MAPS ----------
+    _newShotDragState() {
+      return {
+        active: false,
+        pointerId: null,
+        idx: -1,
+
+        // for history pollution fix
+        startClientX: 0,
+        startClientY: 0,
+        moved: false,
+        historyPushed: false,
+        snapshot: null,
+
+        // ghost-click suppression after drag
+        suppressClickUntil: 0,
+      };
+    },
+
+    bindMultiShotMaps() {
+      UI._bindMultiShotMap("autoShots", {
         box: UI.els.autoShotsMap,
         img: UI.els.autoShotsImg,
         layer: UI.els.autoShotsLayer,
@@ -837,15 +817,9 @@
         readout: UI.els.autoShotsReadout,
         btnUndo: UI.els.btnAutoShotsUndo,
         btnFlip: UI.els.btnAutoShotsFlip,
-        updateMarkersName: "updateAutoShotsMarkers",
-        updateReadoutName: "updateAutoShotsReadout",
       });
-    },
 
-    // NEW: tele shots multi map
-    bindTeleShotsMap() {
-      UI._bindMultiShotMap({
-        stateKey: "teleShots",
+      UI._bindMultiShotMap("teleShots", {
         box: UI.els.teleShotsMap,
         img: UI.els.teleShotsImg,
         layer: UI.els.teleShotsLayer,
@@ -853,53 +827,38 @@
         readout: UI.els.teleShotsReadout,
         btnUndo: UI.els.btnTeleShotsUndo,
         btnFlip: UI.els.btnTeleShotsFlip,
-        updateMarkersName: "updateTeleShotsMarkers",
-        updateReadoutName: "updateTeleShotsReadout",
       });
     },
 
-    // NEW: shared implementation (2&3 same ALLOWED; 1 is separate and already handled above)
-    _bindMultiShotMap(cfg) {
-      const {
-        stateKey,
-        box,
-        img,
-        layer,
-        hidden,
-        readout,
-        btnUndo,
-        btnFlip,
-        updateMarkersName,
-        updateReadoutName,
-      } = cfg;
-
+    _bindMultiShotMap(key, cfg) {
+      const { box, img, layer, hidden, readout, btnUndo, btnFlip } = cfg;
       if (!box || !img || !layer || !hidden || !readout) return;
-
       if (box.dataset.bound === "1") return;
       box.dataset.bound = "1";
 
-      // ---- AYAR: 2 ve 3 için allowed bölgeler (aynı) ----
-      // Normalized coords: (0,0)=top-left, (1,1)=bottom-right
-      // Burayı sen ayarlayacaksın:
+      // allowed zones placeholder (you said you’ll set later)
       const ALLOWED = [{ type: "rect", x0: 0.0, y0: 0.0, x1: 1.0, y1: 1.0 }];
-
       const PREC = 3;
 
-      const st = UI.state[stateKey] || {
+      const st = UI.state[key] || {
         flipped: false,
         points: [],
         history: [],
+        allowed: ALLOWED,
+        prec: PREC,
+        drag: UI._newShotDragState(),
       };
-      UI.state[stateKey] = st;
+      UI.state[key] = st;
 
       const clamp01 = (v) => Math.max(0, Math.min(1, v));
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
       const deepCopyPoints = (pts) =>
         pts.map((p) => ({ x: p.x, y: p.y, zone: p.zone }));
 
       const findAllowedIndex = (x, y) => {
-        for (let i = 0; i < ALLOWED.length; i++) {
-          const a = ALLOWED[i];
+        for (let i = 0; i < st.allowed.length; i++) {
+          const a = st.allowed[i];
           if (a.type === "rect") {
             if (x >= a.x0 && x <= a.x1 && y >= a.y0 && y <= a.y1) return i;
           }
@@ -908,7 +867,7 @@
       };
 
       const clampToAllowedRect = (x, y, idx) => {
-        const a = ALLOWED[idx];
+        const a = st.allowed[idx];
         if (!a || a.type !== "rect") return { x, y };
         return { x: clamp(x, a.x0, a.x1), y: clamp(y, a.y0, a.y1) };
       };
@@ -919,18 +878,13 @@
         if (!st.points.length) return "";
         return st.points
           .map(
-            (p) => `${Number(p.x).toFixed(PREC)},${Number(p.y).toFixed(PREC)}`,
+            (p) => `${Number(p.x).toFixed(st.prec)},${Number(p.y).toFixed(st.prec)}`,
           )
           .join("|");
       };
 
       const syncHidden = () => {
         hidden.value = pointsToString();
-      };
-
-      UI[updateReadoutName] = () => {
-        const n = st.points.length;
-        readout.textContent = I18N.format("shotsReadout", { n });
       };
 
       const canonicalFromClient = (clientX, clientY) => {
@@ -973,18 +927,17 @@
         });
       };
 
-      UI[updateMarkersName] = () => {
-        renderMarkers();
-      };
-
       const commitAndRender = () => {
         syncHidden();
-        UI[updateReadoutName]?.();
+        UI._updateShotReadout(key);
         renderMarkers();
       };
 
-      // click on layer: add a new point (unless clicking a marker)
+      // add points (click)
       layer.addEventListener("click", (e) => {
+        // ghost-click suppression after drag end
+        if (Date.now() < st.drag.suppressClickUntil) return;
+
         if (e.target && e.target.closest && e.target.closest(".shot-marker"))
           return;
 
@@ -993,7 +946,7 @@
 
         const idx = findAllowedIndex(c.x, c.y);
         if (idx < 0) {
-          UI.toast(I18N.t("toastStartOutOfBounds"));
+          UI.toast(I18N.t("toastShotOutOfBounds"));
           return;
         }
 
@@ -1002,11 +955,7 @@
         commitAndRender();
       });
 
-      // drag markers
-      let dragging = false;
-      let dragPointerId = null;
-      let dragIdx = -1;
-
+      // drag markers (pointer)
       const onPointerDown = (e) => {
         const mk =
           e.target && e.target.closest
@@ -1017,17 +966,20 @@
         const idx = Number(mk.dataset.idx);
         if (!Number.isFinite(idx) || !st.points[idx]) return;
 
-        dragging = true;
-        dragPointerId = e.pointerId;
-        dragIdx = idx;
+        st.drag.active = true;
+        st.drag.pointerId = e.pointerId;
+        st.drag.idx = idx;
+
+        st.drag.startClientX = e.clientX;
+        st.drag.startClientY = e.clientY;
+        st.drag.moved = false;
+        st.drag.historyPushed = false;
+        st.drag.snapshot = deepCopyPoints(st.points);
 
         mk.classList.add("dragging");
 
-        // snapshot before move (so undo reverts)
-        st.history.push(deepCopyPoints(st.points));
-
         try {
-          layer.setPointerCapture(dragPointerId);
+          layer.setPointerCapture(st.drag.pointerId);
         } catch {}
 
         e.preventDefault();
@@ -1035,13 +987,31 @@
       };
 
       const onPointerMove = (e) => {
-        if (!dragging || e.pointerId !== dragPointerId) return;
-        if (dragIdx < 0 || !st.points[dragIdx]) return;
+        if (!st.drag.active || e.pointerId !== st.drag.pointerId) return;
+        const idx = st.drag.idx;
+        if (idx < 0 || !st.points[idx]) return;
 
         const c = canonicalFromClient(e.clientX, e.clientY);
         if (!c) return;
 
-        const p = st.points[dragIdx];
+        // determine whether this is "real movement"
+        const dx = e.clientX - st.drag.startClientX;
+        const dy = e.clientY - st.drag.startClientY;
+        const dist = Math.hypot(dx, dy);
+
+        if (!st.drag.moved && dist >= CFG.dragMoveThresholdPx) {
+          st.drag.moved = true;
+
+          // history pollution fix: push snapshot only when movement actually happens
+          if (!st.drag.historyPushed && st.drag.snapshot) {
+            st.history.push(st.drag.snapshot);
+            st.drag.historyPushed = true;
+          }
+        }
+
+        // even if moved is false, we still update position a bit due to jitter;
+        // but we won't have polluted undo history.
+        const p = st.points[idx];
         const zone = p.zone ?? findAllowedIndex(p.x, p.y);
         if (zone < 0) return;
 
@@ -1049,8 +1019,7 @@
         p.x = clamped.x;
         p.y = clamped.y;
 
-        // update just this marker position
-        const mk = layer.querySelector(`.shot-marker[data-idx="${dragIdx}"]`);
+        const mk = layer.querySelector(`.shot-marker[data-idx="${idx}"]`);
         if (mk) {
           const pos = pixelFromCanonical(p.x, p.y);
           mk.style.left = `${pos.left}px`;
@@ -1058,23 +1027,34 @@
         }
 
         syncHidden();
-        UI[updateReadoutName]?.();
+        UI._updateShotReadout(key);
+
+        e.preventDefault();
       };
 
       const onPointerUp = (e) => {
-        if (!dragging || e.pointerId !== dragPointerId) return;
+        if (!st.drag.active || e.pointerId !== st.drag.pointerId) return;
 
-        dragging = false;
-
-        const mk = layer.querySelector(`.shot-marker[data-idx="${dragIdx}"]`);
+        const idx = st.drag.idx;
+        const mk = layer.querySelector(`.shot-marker[data-idx="${idx}"]`);
         if (mk) mk.classList.remove("dragging");
 
-        dragPointerId = null;
-        dragIdx = -1;
+        // ghost-click suppression window (fix for post-drag click)
+        if (st.drag.moved) {
+          st.drag.suppressClickUntil = Date.now() + CFG.dragSuppressClickMs;
+        }
+
+        st.drag.active = false;
+        st.drag.pointerId = null;
+        st.drag.idx = -1;
+        st.drag.snapshot = null;
 
         try {
           layer.releasePointerCapture(e.pointerId);
         } catch {}
+
+        e.preventDefault();
+        e.stopPropagation();
       };
 
       layer.addEventListener("pointerdown", onPointerDown);
@@ -1087,15 +1067,15 @@
         btnUndo.addEventListener("click", () => {
           if (st.history.length) {
             st.points = st.history.pop();
-            commitAndRender();
           } else {
             st.points = [];
-            commitAndRender();
           }
+          st.drag = UI._newShotDragState();
+          commitAndRender();
         });
       }
 
-      // flip (manual)
+      // flip
       if (btnFlip) {
         btnFlip.addEventListener("click", () => {
           st.flipped = !st.flipped;
@@ -1104,9 +1084,85 @@
         });
       }
 
-      // initial
       setFlipClass();
       commitAndRender();
+    },
+
+    _updateShotReadout(key) {
+      const st = UI.state[key];
+      if (!st) return;
+
+      if (key === "autoShots" && UI.els.autoShotsReadout) {
+        UI.els.autoShotsReadout.textContent = I18N.format("shotsReadout", {
+          n: st.points.length,
+        });
+      } else if (key === "teleShots" && UI.els.teleShotsReadout) {
+        UI.els.teleShotsReadout.textContent = I18N.format("shotsReadout", {
+          n: st.points.length,
+        });
+      }
+    },
+
+    updateAutoShotsReadout() {
+      UI._updateShotReadout("autoShots");
+    },
+
+    updateTeleShotsReadout() {
+      UI._updateShotReadout("teleShots");
+    },
+
+    updateAutoShotsMarkers() {
+      // re-render markers from canonical points (for resize/page switch)
+      const st = UI.state.autoShots;
+      if (!st || !UI.els.autoShotsLayer || !UI.els.autoShotsMap || !UI.els.autoShotsImg)
+        return;
+
+      // reuse commit render mechanics without touching history
+      UI.els.autoShotsLayer.innerHTML = "";
+      st.points.forEach((p, idx) => {
+        const m = document.createElement("div");
+        m.className = "shot-marker";
+        m.dataset.idx = String(idx);
+
+        const boxRect = UI.els.autoShotsMap.getBoundingClientRect();
+        const imgRect = UI.els.autoShotsImg.getBoundingClientRect();
+        const visX = st.flipped ? 1 - p.x : p.x;
+        const visY = p.y;
+
+        const left = imgRect.left - boxRect.left + visX * imgRect.width;
+        const top = imgRect.top - boxRect.top + visY * imgRect.height;
+
+        m.style.left = `${left}px`;
+        m.style.top = `${top}px`;
+
+        UI.els.autoShotsLayer.appendChild(m);
+      });
+    },
+
+    updateTeleShotsMarkers() {
+      const st = UI.state.teleShots;
+      if (!st || !UI.els.teleShotsLayer || !UI.els.teleShotsMap || !UI.els.teleShotsImg)
+        return;
+
+      UI.els.teleShotsLayer.innerHTML = "";
+      st.points.forEach((p, idx) => {
+        const m = document.createElement("div");
+        m.className = "shot-marker";
+        m.dataset.idx = String(idx);
+
+        const boxRect = UI.els.teleShotsMap.getBoundingClientRect();
+        const imgRect = UI.els.teleShotsImg.getBoundingClientRect();
+        const visX = st.flipped ? 1 - p.x : p.x;
+        const visY = p.y;
+
+        const left = imgRect.left - boxRect.left + visX * imgRect.width;
+        const top = imgRect.top - boxRect.top + visY * imgRect.height;
+
+        m.style.left = `${left}px`;
+        m.style.top = `${top}px`;
+
+        UI.els.teleShotsLayer.appendChild(m);
+      });
     },
   };
 

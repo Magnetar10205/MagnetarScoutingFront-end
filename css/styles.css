@@ -121,10 +121,6 @@ header {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
 }
-.brand .sub {
-  font-size: 12px;
-  color: var(--muted);
-}
 
 .top-actions {
   display: flex;
@@ -631,6 +627,7 @@ input[type="number"] {
 .panel-body {
   padding: 14px;
 }
+
 /* --- Fix: native select dropdown options readable (white-on-white bug) --- */
 #langSelect {
   /* kapalı halde (modal içinde) koyu görünüm */
@@ -648,13 +645,9 @@ input[type="number"] {
 /* option'lar genelde select'in rengini inherit eder; zorla koyu yap */
 #langSelect option {
   color: #fff !important;
-  background: rgba(
-    15,
-    18,
-    40,
-    0.98
-  ); /* bazı tarayıcılar bunu umursamaz, ama color çoğu yerde çalışır */
+  background: rgba(15, 18, 40, 0.98);
 }
+
 /* --- Robot position accent: Red vs Blue --- */
 #posR1:checked + label,
 #posR2:checked + label,
@@ -675,33 +668,29 @@ input[type="number"] {
 /* Make prefixed short fields more compact (Team code + Match number) */
 .prefixed .prefix {
   padding: 0 10px;
-  min-width: 44px; /* # kutusu fazla büyümesin */
+  min-width: 44px;
 }
 
 .prefixed input[type="number"] {
   min-width: 0;
 }
 
-/* specifically: keep those two fields tighter on wide screens */
-@media (min-width: 860px) {
-  #teamCode,
-  #matchNumber {
-    max-width: 100%;
-  }
-}
+/* --- Maps (auto start + shot maps) --- */
 
-/* --- Auto start map picker --- */
+/* action buttons row */
 .map-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-end;
+  align-items: center;
   flex-wrap: wrap;
   margin-bottom: 10px;
 }
 
+/* map container */
 .mapbox {
   position: relative;
-  width: 100%;
+  width: min(520px, 100%);
   max-width: 420px;
   margin: 0 auto;
   aspect-ratio: 1 / 1;
@@ -709,14 +698,15 @@ input[type="number"] {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(0, 0, 0, 0.18);
   overflow: hidden;
-  touch-action: none; /* mobile'da zoom/scroll saçmalığını azaltır */
+  touch-action: none;
 }
 
+/* image */
 .mapbox img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
   display: block;
+  width: 100%;
+  height: auto; /* matches your current effective behavior */
+  object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -725,6 +715,7 @@ input[type="number"] {
   transform: scaleX(-1);
 }
 
+/* single marker (auto start) */
 .map-marker {
   position: absolute;
   width: 16px;
@@ -746,106 +737,15 @@ input[type="number"] {
   cursor: grabbing;
 }
 
-/* multi-marker map layer */
+/* overlay layer for multi-shot maps */
 .map-layer {
-  position: absolute;
-  inset: 0;
-}
-
-/* --- Shot maps: markers visible + maps centered --- */
-
-/* Map action buttons row */
-.map-actions {
-  display: flex;
-  gapsgap: 10px;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-/* Make ALL mapboxes centered like the first one */
-.mapbox {
-  position: relative;
-  width: min(520px, 100%);
-  margin: 0 auto; /* <-- center */
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.18);
-}
-
-/* Image fills the box nicely */
-.mapbox img {
-  display: block;
-  width: 100%;
-  height: auto;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-/* Overlay layer for clicks + markers */
-.map-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 2; /* <-- above the image */
-}
-
-/* MARKERS (this is the missing part) */
-.map-layer .map-marker {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  transform: translate(-50%, -50%);
-  background: linear-gradient(
-    180deg,
-    rgba(124, 246, 255, 0.95),
-    rgba(180, 140, 255, 0.85)
-  );
-  border: 1px solid rgba(124, 246, 255, 0.7);
-  box-shadow: 0 0 0 6px rgba(124, 246, 255, 0.1);
-  cursor: grab;
-  touch-action: none; /* pointer drag için şart */
-}
-
-.map-layer .map-marker.dragging {
-  cursor: grabbing;
-  box-shadow: 0 0 0 10px rgba(124, 246, 255, 0.12);
-}
-
-/* --- Shot maps fixes: visible markers + centered layout --- */
-
-@media (min-width: 860px) {
-  .grid.two .field.full {
-    grid-column: 1 / -1;
-  }
-}
-
-/* buttons row (typo fix + alignment) */
-.map-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-/* make sure these map boxes are positioning contexts */
-#autoShotsMap,
-#teleShotsMap {
-  position: relative;
-}
-
-/* overlay must sit on top of the image */
-#autoShotsLayer,
-#teleShotsLayer {
   position: absolute;
   inset: 0;
   z-index: 5;
   touch-action: none;
 }
 
-/* IMPORTANT: avoid collision with any existing .map-marker rules */
+/* shot markers */
 .shot-marker {
   position: absolute;
   width: 14px;
@@ -860,9 +760,17 @@ input[type="number"] {
   border: 1px solid rgba(124, 246, 255, 0.7);
   box-shadow: 0 0 0 6px rgba(124, 246, 255, 0.1);
   cursor: grab;
+  touch-action: none;
 }
 
 .shot-marker.dragging {
   cursor: grabbing;
   box-shadow: 0 0 0 10px rgba(124, 246, 255, 0.12);
+}
+
+/* make full-width fields span both columns on desktop */
+@media (min-width: 860px) {
+  .grid.two .field.full {
+    grid-column: 1 / -1;
+  }
 }
