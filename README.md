@@ -11,4 +11,5 @@ Tırmanma durumu "Tırmandı / Denedi / Tırmanamadı"dan "Tırmandı / Denedi /
 
 Otonom atış konumları ve Telop atış konumlarında imkansız atış konumları engellendi
 <br><br><br>
+https://magnetar10205.github.io/MagnetarScoutingFront-end/<br>
 _backend olarak verilen çıktı output.md dosyasında_
