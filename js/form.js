@@ -8,24 +8,44 @@
   const Form = {
     initEnhancedInputs(root = document) {
       // counters
-      Utils.qsa("[data-counter]", root).forEach(wrap => {
+      Utils.qsa("[data-counter]", root).forEach((wrap) => {
         if (wrap.dataset.bound === "1") return;
         wrap.dataset.bound = "1";
 
-        const dec = Utils.qs(".dec", wrap);
-        const inc = Utils.qs(".inc", wrap);
         const input = Utils.qs("input[type='number']", wrap);
+        const decButtons = Utils.qsa(".dec", wrap);
+        const incButtons = Utils.qsa(".inc", wrap);
 
-        const clamp = () => { input.value = String(Utils.clampInt(input.value, 0)); };
+        const clamp = () => {
+          input.value = String(Utils.clampInt(input.value, 0));
+        };
 
-        dec.addEventListener("click", () => { input.value = String(Utils.clampInt(input.value, 0) - 1); clamp(); });
-        inc.addEventListener("click", () => { input.value = String(Utils.clampInt(input.value, 0) + 1); clamp(); });
+        const applyDelta = (delta) => {
+          const current = Utils.clampInt(input.value, 0);
+          input.value = String(current + delta);
+          clamp();
+        };
+
+        decButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const step = Utils.clampInt(btn.dataset.step || 1, 1);
+            applyDelta(-step);
+          });
+        });
+
+        incButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const step = Utils.clampInt(btn.dataset.step || 1, 1);
+            applyDelta(step);
+          });
+        });
+
         input.addEventListener("input", clamp);
         clamp();
       });
 
       // switches
-      Utils.qsa("[data-switch]", root).forEach(sw => {
+      Utils.qsa("[data-switch]", root).forEach((sw) => {
         if (sw.dataset.bound === "1") return;
         sw.dataset.bound = "1";
 
@@ -71,9 +91,13 @@
         inp.addEventListener("change", sanitize);
 
         // prevent wheel changing it while scrolling
-        inp.addEventListener("wheel", (e) => {
-          if (document.activeElement === inp) e.preventDefault();
-        }, { passive: false });
+        inp.addEventListener(
+          "wheel",
+          (e) => {
+            if (document.activeElement === inp) e.preventDefault();
+          },
+          { passive: false },
+        );
       };
 
       bind("#matchNumber");
@@ -106,7 +130,9 @@
               data[el.name] = "";
             } else {
               const digits = raw.replace(/[^\d]/g, "");
-              data[el.name] = digits.length ? String(Utils.clampInt(digits, 1)) : "";
+              data[el.name] = digits.length
+                ? String(Utils.clampInt(digits, 1))
+                : "";
             }
             continue;
           }
@@ -146,13 +172,13 @@
     },
 
     clampAllCounters() {
-      Utils.qsa("[data-counter] input[type='number']").forEach(inp => {
+      Utils.qsa("[data-counter] input[type='number']").forEach((inp) => {
         inp.value = String(Utils.clampInt(inp.value, 0));
       });
     },
 
     syncSwitchVisuals() {
-      Utils.qsa("[data-switch]").forEach(sw => {
+      Utils.qsa("[data-switch]").forEach((sw) => {
         const input = Utils.qs("input[type='checkbox']", sw);
         sw.classList.toggle("on", !!input.checked);
       });
@@ -173,10 +199,9 @@
       if (!d.robotPosition) missing.push("robotPosition");
 
       return { ok: missing.length === 0, missing };
-    }
+    },
   };
 
   global.MagnetarScouting = global.MagnetarScouting || {};
   global.MagnetarScouting.Form = Form;
-
 })(window);

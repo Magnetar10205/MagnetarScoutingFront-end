@@ -477,21 +477,57 @@ input[type="number"] {
 }
 
 .counter {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 48px 48px 48px minmax(72px, 1fr) 48px 48px 48px;
+  gap: 6px;
   align-items: center;
+  width: 100%;
 }
+
 .counter button {
-  width: var(--tap);
+  width: 100%;
+  height: var(--tap);
   padding: 0;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 900;
 }
+
 .counter input[type="number"] {
+  width: 100%;
+  min-width: 0;
   text-align: center;
   font-weight: 900;
   font-size: 16px;
   min-height: var(--tap);
+}
+
+@media (max-width: 600px) {
+  .counter {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      "dec1 dec5 dec10"
+      "input input input"
+      "inc10 inc5 inc1";
+    gap: 8px;
+  }
+
+  .counter .dec[data-step="1"]  { grid-area: dec1; }
+  .counter .dec[data-step="5"]  { grid-area: dec5; }
+  .counter .dec[data-step="10"] { grid-area: dec10; }
+
+  .counter input[type="number"] { 
+    grid-area: input;
+    min-height: 52px;
+    font-size: 18px;
+  }
+
+  .counter .inc[data-step="10"] { grid-area: inc10; }
+  .counter .inc[data-step="5"]  { grid-area: inc5; }
+  .counter .inc[data-step="1"]  { grid-area: inc1; }
+
+  .counter button {
+    font-size: 15px;
+  }
 }
 
 .hintline {

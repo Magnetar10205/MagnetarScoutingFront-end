@@ -837,7 +837,7 @@
       box.dataset.bound = "1";
 
       // allowed zones placeholder (you said you’ll set later)
-      const ALLOWED = [{ type: "rect", x0: 0.0, y0: 0.0, x1: 1.0, y1: 1.0 }];
+      const ALLOWED = [{ type: "rect", x0: 0.0, y0: 0.0, x1: 0.550, y1: 1.0 }];
       const PREC = 3;
 
       const st = UI.state[key] || {

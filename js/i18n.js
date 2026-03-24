@@ -122,7 +122,7 @@
         level1Climb: {
           climbed: "Tırmandı",
           attempted: "Denedi",
-          failed: "Tırmanamadı",
+          failed: "Denemedi",
         },
         driverSkill: {
           ineffective: "Etkisiz",
@@ -256,7 +256,7 @@
         level1Climb: {
           climbed: "Climbed",
           attempted: "Attempted",
-          failed: "Failed",
+          failed: "Did not attempt",
         },
         driverSkill: {
           ineffective: "Ineffective",

@@ -6,10 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Magnetar Scouting</title>
     <link rel="stylesheet" href="css/styles.css" />
-    <link rel="icon" href="assets/favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="assets/favicon-16.png" sizes="16x16">
-    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180">
+    <link rel="icon" href="assets/favicon.ico" sizes="any" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="assets/favicon-32.png"
+      sizes="32x32"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="assets/favicon-16.png"
+      sizes="16x16"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="assets/apple-touch-icon.png"
+      sizes="180x180"
+    />
   </head>
 
   <body>
@@ -212,9 +226,10 @@
               <div class="field">
                 <label>Otonomda atılan yük sayısı</label>
                 <div class="counter" data-counter>
-                  <button type="button" class="dec" aria-label="Azalt">
-                    −
-                  </button>
+                  <button type="button" class="dec" data-step="1">-1</button>
+                  <button type="button" class="dec" data-step="5">-5</button>
+                  <button type="button" class="dec" data-step="10">-10</button>
+
                   <input
                     type="number"
                     name="autoScored"
@@ -222,28 +237,31 @@
                     min="0"
                     inputmode="numeric"
                   />
-                  <button type="button" class="inc" aria-label="Arttır">
-                    +
-                  </button>
+
+                  <button type="button" class="inc" data-step="10">+10</button>
+                  <button type="button" class="inc" data-step="5">+5</button>
+                  <button type="button" class="inc" data-step="1">+1</button>
                 </div>
               </div>
 
               <div class="field">
                 <label>Nötr bölgeden getirilen yük sayısı</label>
                 <div class="counter" data-counter>
-                  <button type="button" class="dec" aria-label="Azalt">
-                    −
-                  </button>
+                  <button type="button" class="dec" data-step="1">-1</button>
+                  <button type="button" class="dec" data-step="5">-5</button>
+                  <button type="button" class="dec" data-step="10">-10</button>
+
                   <input
                     type="number"
-                    name="autoNeutralBrought"
+                    name="autoScored"
                     value="0"
                     min="0"
                     inputmode="numeric"
                   />
-                  <button type="button" class="inc" aria-label="Arttır">
-                    +
-                  </button>
+
+                  <button type="button" class="inc" data-step="10">+10</button>
+                  <button type="button" class="inc" data-step="5">+5</button>
+                  <button type="button" class="inc" data-step="1">+1</button>
                 </div>
               </div>
             </div>
@@ -272,7 +290,7 @@
                   id="l1_no"
                   name="level1Climb"
                   value="failed"
-                /><label for="l1_no">Tırmanamadı</label>
+                /><label for="l1_no">Denemedi</label>
               </div>
             </div>
 
@@ -360,38 +378,42 @@
               <div class="field">
                 <label>Tele-op ta atılan yük sayısı</label>
                 <div class="counter" data-counter>
-                  <button type="button" class="dec" aria-label="Azalt">
-                    −
-                  </button>
+                  <button type="button" class="dec" data-step="1">-1</button>
+                  <button type="button" class="dec" data-step="5">-5</button>
+                  <button type="button" class="dec" data-step="10">-10</button>
+
                   <input
                     type="number"
-                    name="teleopScored"
+                    name="autoScored"
                     value="0"
                     min="0"
                     inputmode="numeric"
                   />
-                  <button type="button" class="inc" aria-label="Arttır">
-                    +
-                  </button>
+
+                  <button type="button" class="inc" data-step="10">+10</button>
+                  <button type="button" class="inc" data-step="5">+5</button>
+                  <button type="button" class="inc" data-step="1">+1</button>
                 </div>
               </div>
 
               <div class="field">
                 <label>Nötr alandan pas verilen yük sayısı</label>
                 <div class="counter" data-counter>
-                  <button type="button" class="dec" aria-label="Azalt">
-                    −
-                  </button>
+                  <button type="button" class="dec" data-step="1">-1</button>
+                  <button type="button" class="dec" data-step="5">-5</button>
+                  <button type="button" class="dec" data-step="10">-10</button>
+
                   <input
                     type="number"
-                    name="teleopNeutralPassed"
+                    name="autoScored"
                     value="0"
                     min="0"
                     inputmode="numeric"
                   />
-                  <button type="button" class="inc" aria-label="Arttır">
-                    +
-                  </button>
+
+                  <button type="button" class="inc" data-step="10">+10</button>
+                  <button type="button" class="inc" data-step="5">+5</button>
+                  <button type="button" class="inc" data-step="1">+1</button>
                 </div>
               </div>
             </div>
