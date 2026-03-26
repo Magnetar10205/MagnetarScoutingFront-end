@@ -110,7 +110,7 @@
 
       // options (codes to labels)
       opt: {
-        matchLevel: { quals: "Quals", finals: "Finals" },
+        matchLevel: { practice: "Practice", quals: "Quals", finals: "Finals" },
         robotPos: {
           r1: "Kırmızı 1",
           r2: "Kırmızı 2",
@@ -244,7 +244,7 @@
       sumTeleGround: "Teleop: Ground",
 
       opt: {
-        matchLevel: { quals: "Qualifications", finals: "Finals" },
+        matchLevel: { practice: "Practice", quals: "Quals", finals: "Finals" },
         robotPos: {
           r1: "Red 1",
           r2: "Red 2",

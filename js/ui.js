@@ -283,7 +283,7 @@
       const matchNumber = fillNA(cleanText(d.matchNumber).replaceAll("#", ""));
       const teamCode = fillNA(cleanText(d.teamCode).replaceAll("#", ""));
 
-      const matchLevelMap = { quals: "qm", finals: "f" };
+      const matchLevelMap = { practice: "p", quals: "qm", finals: "f" };
       const matchLevel = fillNA(matchLevelMap[d.matchLevel] || d.matchLevel);
 
       const robotPos = fillNA(d.robotPosition);

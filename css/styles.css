@@ -356,6 +356,20 @@ input[type="number"] {
   position: relative;
 }
 
+.seg-match-level {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.seg-match-level label {
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .seg-match-level {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Instead of display:none (kills focus + accessibility), visually hide */
 .seg input {
   position: absolute;

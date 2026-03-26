@@ -1,31 +1,3 @@
-# magnetar scouting app front end 1.0!!!
-## özellikler 
-**6 adımlı scouting formu**
-1. maç bilgisi
-2. otonom
-3. tele op
-4. endgame/sürücü
-5. özellikler
-6. özet/data
-
-**zorunlu alan kontrolü**\
-1 numaralı sayfadaki bilgilerden önemli olanlar doldurulmadan ileri gidilmez, toast notification şeklinde doldurmayan bilgiler uyarılır
-
-**harita seçimi**\
-maç bilgisi sayfasında robotun nereden başladığı işaretlenebilir, 2. ve 3. sayfalarda nerelerden atış yapıldığı işaretlenebilir, noktalar geri alınıp sürüklenebilir.
-
-**i18n**\
-hem türkçe hem ingilizce dil desteği
-
-**özet ve data çıktı alanı**\
-datanın kopyalanmasına ve özet şeklinde görülmesine izin verilir.
-
-## yapılacaklar ( en önemliden en önemsize )
-henüz kesinleştiremesem de bir yere magnetar logosunun koyulması
-
-## bilinen buglar
-test ederken bu versiyonda gördüğüm bir bug yok, bulursanız lütfen whatsapp üzerinden yazın
-
 # şu anki data output formatı
 **1-scouterInitials**
 _gözlemcinin isminin ilk harfleri_
@@ -42,7 +14,7 @@ boş bırakılamaz, bırakılırsa sıradaki sayfaya geçilmesine izin verilmez
 **3-matchLevel**
 _maç düzeyi_
 
-çıktısı: qm (quals), f (finals)\
+çıktısı: p (practice), qm (quals), f (finals)\
 boş bırakılamaz,bırakılırsa sıradaki sayfaya geçilmesine izin verilmez
 
 **4-matchNumber**
