@@ -18,6 +18,10 @@
       settingsTitle: "Ayarlar",
       settingsClose: "Kapat",
       settingsLang: "Dil",
+      refreshWarnLabel: "Sayfa yenileme uyarısı",
+      refreshWarnMain: "Sayfa yenileme / çıkış uyarısı",
+      refreshWarnHint: "Varsayılan: Açık. Bu cihazda kaydedilir.",
+      onOff: "Kapalı/Açık",
       langTR: "Türkçe",
       langEN: "English",
 
@@ -158,6 +162,10 @@
       settingsTitle: "Settings",
       settingsClose: "Close",
       settingsLang: "Language",
+      refreshWarnLabel: "Page refresh warning notification",
+      refreshWarnMain: "Page refresh / exit warning",
+      refreshWarnHint: "Default: On. Saved on this device.",
+      onOff: "Off/On",
       langTR: "Turkish",
       langEN: "English",
 
@@ -368,6 +376,9 @@
       setText("#settingsTitle", t.settingsTitle);
       setText("#btnCloseSettings", t.settingsClose);
       setText("#langLabel", t.settingsLang);
+      setText("#refreshWarnLabel", t.refreshWarnLabel);
+      setText("#refreshWarnMain", t.refreshWarnMain);
+      setText("#refreshWarnHint", t.refreshWarnHint);
       setText('#langSelect option[value="tr"]', t.langTR);
       setText('#langSelect option[value="en"]', t.langEN);
 
@@ -436,6 +447,8 @@
       Utils.qsa(".toggle .tlabel .hint").forEach(
         (h) => (h.textContent = t.yesNo),
       );
+
+      setText("#refreshWarnHint", t.onOff);
 
       // toggle main texts
       setToggleMainByCheckboxName("autoPickupDepot", t.depot);

@@ -1,3 +1,9 @@
+# magnetar scouting app front end 1.3
+## yenilikler
+autosave.js sayesinde sayfa yenilemelerde tüm form yok olmuyor.
+aynı zamanda sayfa yenilemede uyarı çıkıyor
+bu uyarıyı ayarlardan kapatabiliyorsun
+
 # magnetar scouting app front end 1.1.2
 ## yenilikler
 "practice" kısmı eklendi
