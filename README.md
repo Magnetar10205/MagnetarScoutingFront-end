@@ -3,6 +3,7 @@
 autosave.js sayesinde sayfa yenilemelerde tüm form yok olmuyor.
 aynı zamanda sayfa yenilemede uyarı çıkıyor
 bu uyarıyı ayarlardan kapatabiliyorsun
+1.3.1 patch: "nötr" ve "outpost" checkboxları yer değiştirdi.
 
 # magnetar scouting app front end 1.1.2
 ## yenilikler
